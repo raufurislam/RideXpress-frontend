@@ -1,7 +1,5 @@
-// import config from "@/config";
 import config from "@/config";
-// import axios, { type AxiosRequestConfig } from "axios";
-import axios, { AxiosRequestConfig } from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 
 export const axiosInstance = axios.create({
   baseURL: config.baseUrl,
