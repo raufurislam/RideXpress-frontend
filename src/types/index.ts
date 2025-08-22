@@ -1,4 +1,4 @@
-export type { IRegister } from "./auth.type";
+export type { IRegister, ILogin } from "./auth.type";
 export type { IUser } from "./user.type";
 
 export interface IResponse<T> {

@@ -18,6 +18,7 @@ import Password from "@/components/ui/Password";
 import { toast } from "sonner";
 import { useRegisterMutation } from "@/redux/features/auth/auth.api";
 import { FcGoogle } from "react-icons/fc";
+import config from "@/config";
 
 const registerSchema = z
   .object({
@@ -159,7 +160,12 @@ export function RegisterForm({
             Or continue with
           </span>
         </div>
-        <Button variant="outline" className="w-full">
+        <Button
+          onClick={() => window.open(`${config.baseUrl}/auth/google`)}
+          type="button"
+          variant="outline"
+          className="w-full cursor-pointer"
+        >
           <FcGoogle />
           Login with Google
         </Button>

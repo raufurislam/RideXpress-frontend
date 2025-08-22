@@ -8,7 +8,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <Logo />
-              <p className="text-foreground font-medium">Ph Tour</p>
+              <p className="text-foreground font-medium">Ride Express</p>
             </div>
 
             <p className="mt-4 max-w-xs text-muted-foreground">
