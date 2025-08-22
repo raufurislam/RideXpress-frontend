@@ -7,3 +7,4 @@ export interface IResponse<T> {
   message: string;
   data: T;
 }
+export type TRole = "SUPER_ADMIN" | "ADMIN" | "RIDER" | "DRIVER";
