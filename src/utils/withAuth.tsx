@@ -1,3 +1,4 @@
+// withAuth.ts
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import type { TRole } from "@/types";
 import type { ComponentType } from "react";

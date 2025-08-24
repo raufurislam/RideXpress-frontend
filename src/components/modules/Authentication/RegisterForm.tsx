@@ -16,7 +16,10 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Password from "@/components/ui/Password";
 import { toast } from "sonner";
-import { useRegisterMutation } from "@/redux/features/auth/auth.api";
+import {
+  useLoginMutation,
+  useRegisterMutation,
+} from "@/redux/features/auth/auth.api";
 import { FcGoogle } from "react-icons/fc";
 import config from "@/config";
 
@@ -37,6 +40,7 @@ export function RegisterForm({
   ...props
 }: React.ComponentProps<"form">) {
   const [register] = useRegisterMutation();
+  const [login] = useLoginMutation();
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof registerSchema>>({
@@ -59,6 +63,10 @@ export function RegisterForm({
       const result = await register(userInfo).unwrap();
       console.log(result);
       toast.success("User created successfully");
+
+      // auto-login
+      await login({ email: data.email, password: data.password }).unwrap();
+
       navigate("/");
     } catch (error) {
       console.log(error);
@@ -97,6 +105,7 @@ export function RegisterForm({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="email"
@@ -117,6 +126,7 @@ export function RegisterForm({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -133,6 +143,7 @@ export function RegisterForm({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="confirmPassword"
@@ -149,6 +160,7 @@ export function RegisterForm({
                 </FormItem>
               )}
             />
+
             <Button type="submit" className="w-full">
               Submit
             </Button>

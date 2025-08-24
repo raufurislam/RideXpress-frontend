@@ -1,3 +1,4 @@
+import DriverRequest from "@/pages/Admin/DriverRequest";
 import RequestRide from "@/pages/Rider/RequestRide";
 import type { ISidebarItem } from "@/types";
 
@@ -7,8 +8,13 @@ export const riderSidebarItems: ISidebarItem[] = [
     items: [
       {
         title: "Booking",
-        url: "/user/bookings",
+        url: "/rider/bookings",
         component: RequestRide,
+      },
+      {
+        title: "Driver Request",
+        url: "/rider/driver-request",
+        component: DriverRequest,
       },
     ],
   },
