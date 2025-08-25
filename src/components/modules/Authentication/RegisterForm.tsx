@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// src/components/modules/Authentication/RegisterForm.tsx
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,21 +21,37 @@ import { toast } from "sonner";
 import {
   useLoginMutation,
   useRegisterMutation,
+  useLazyUserInfoQuery,
 } from "@/redux/features/auth/auth.api";
 import { FcGoogle } from "react-icons/fc";
 import config from "@/config";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Car, User } from "lucide-react";
 
 const registerSchema = z
   .object({
-    name: z.string().min(3, { error: "Name is too short" }).max(50),
-    email: z.email(),
-    password: z.string().min(8, { error: "Password is too short" }),
-    confirmPassword: z.string().min(8, { error: "Password is too short" }),
+    name: z.string().min(3).max(50),
+    email: z.string().email(),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
+    role: z.enum(["RIDER", "DRIVER"]),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Password do not match",
+    message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+const roleRedirectMap: Record<"RIDER" | "DRIVER", string> = {
+  RIDER: "/rider/bookings",
+  DRIVER: "/rider/driver-request",
+};
 
 export function RegisterForm({
   className,
@@ -41,6 +59,7 @@ export function RegisterForm({
 }: React.ComponentProps<"form">) {
   const [register] = useRegisterMutation();
   const [login] = useLoginMutation();
+  const [triggerUserInfo] = useLazyUserInfoQuery();
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof registerSchema>>({
@@ -50,6 +69,7 @@ export function RegisterForm({
       email: "",
       password: "",
       confirmPassword: "",
+      role: "RIDER",
     },
   });
 
@@ -59,15 +79,22 @@ export function RegisterForm({
       email: data.email,
       password: data.password,
     };
+
     try {
-      const result = await register(userInfo).unwrap();
-      console.log(result);
+      await register(userInfo).unwrap();
       toast.success("User created successfully");
 
-      // auto-login
       await login({ email: data.email, password: data.password }).unwrap();
 
-      navigate("/");
+      // Ensure auth cookie/session is recognized before navigating
+      try {
+        await triggerUserInfo(undefined).unwrap();
+      } catch (_) {
+        // ignore; navigate anyway — withAuth will handle if truly unauthenticated
+      }
+
+      const redirectTo = roleRedirectMap[data.role] ?? "/";
+      navigate(redirectTo, { replace: true });
     } catch (error) {
       console.log(error);
     }
@@ -76,9 +103,9 @@ export function RegisterForm({
   return (
     <div className={cn("flex flex-col gap-6", className)}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Register your account</h1>
+        <h1 className="text-2xl font-bold">Create Account</h1>
         <p className="text-sm text-muted-foreground">
-          Enter your details to create an account
+          Create your account to get started
         </p>
       </div>
 
@@ -89,6 +116,45 @@ export function RegisterForm({
             className="space-y-6"
             {...props}
           >
+            {/* Role selector buttons */}
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => {
+                const selectedRole = form.watch("role");
+                return (
+                  <FormItem>
+                    <Label className="text-sm font-medium">I want to</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={
+                          selectedRole === "RIDER" ? "default" : "outline"
+                        }
+                        onClick={() => field.onChange("RIDER")}
+                        aria-pressed={selectedRole === "RIDER"}
+                      >
+                        <User className="w-4 h-4" />
+                        Get Rides
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          selectedRole === "DRIVER" ? "default" : "outline"
+                        }
+                        onClick={() => field.onChange("DRIVER")}
+                        aria-pressed={selectedRole === "DRIVER"}
+                      >
+                        <Car className="w-4 h-4" />
+                        Drive & Earn
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+
             <FormField
               control={form.control}
               name="name"
@@ -126,6 +192,31 @@ export function RegisterForm({
                 </FormItem>
               )}
             />
+
+            {/* <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select Role (for redirect only)</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="RIDER">Rider</SelectItem>
+                      <SelectItem value="DRIVER">Driver</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
 
             <FormField
               control={form.control}

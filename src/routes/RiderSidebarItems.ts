@@ -1,4 +1,4 @@
-import DriverRequest from "@/pages/Admin/DriverRequest";
+import DriverRequest from "@/pages/Rider/DriverRequest";
 import RequestRide from "@/pages/Rider/RequestRide";
 import type { ISidebarItem } from "@/types";
 
@@ -7,7 +7,7 @@ export const riderSidebarItems: ISidebarItem[] = [
     title: "History",
     items: [
       {
-        title: "Booking",
+        title: "Book Ride",
         url: "/rider/bookings",
         component: RequestRide,
       },
