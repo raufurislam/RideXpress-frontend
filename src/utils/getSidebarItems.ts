@@ -1,3 +1,4 @@
+// getSidebarItems.ts
 import { role } from "@/constants/role";
 import { adminSidebarItems } from "@/routes/AdminSidebarItems";
 import { riderSidebarItems } from "@/routes/RiderSidebarItems";

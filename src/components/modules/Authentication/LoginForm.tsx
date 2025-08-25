@@ -34,6 +34,7 @@ export function LoginForm({
 
       if (res.success) {
         toast.success("Logged in successfully");
+
         navigate("/");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,7 +117,9 @@ export function LoginForm({
         {/* http://localhost:5000/api/v1/auth/google */}
 
         <Button
-          onClick={() => window.open(`${config.baseUrl}/auth/google`)}
+          onClick={() =>
+            (window.location.href = `${config.baseUrl}/auth/google`)
+          }
           type="button"
           variant="outline"
           className="w-full cursor-pointer"

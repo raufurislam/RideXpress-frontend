@@ -1,3 +1,4 @@
+// types/types.ts
 import type { ComponentType } from "react";
 
 export type { IRegister, ILogin } from "./auth.type";

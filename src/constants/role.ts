@@ -1,3 +1,4 @@
+// constant/role.ts
 export const role = {
   superAdmin: "SUPER_ADMIN",
   admin: "ADMIN",

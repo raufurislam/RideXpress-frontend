@@ -1,3 +1,4 @@
+// withAuth.ts
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import type { TRole } from "@/types";
 import type { ComponentType } from "react";
@@ -11,9 +12,9 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
       return <Navigate to="/login" />;
     }
 
-    if (requiredRole && !isLoading && requiredRole !== data?.data?.role) {
-      return <Navigate to="/unauthorized" />;
-    }
+    // if (requiredRole && !isLoading && requiredRole !== data?.data?.role) {
+    //   return <Navigate to="/unauthorized" />;
+    // } as i dont have any unauthorized route should i keep this??
 
     // console.log("Inside withAuth", data);
     return <Component />;
