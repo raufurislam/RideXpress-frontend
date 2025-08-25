@@ -11,6 +11,10 @@ import { adminSidebarItems } from "./AdminSidebarItems";
 import { generateRoutes } from "@/utils/generateRoutes";
 import { riderSidebarItems } from "./RiderSidebarItems";
 import Unauthorized from "@/pages/Unauthorized";
+import Features from "@/pages/Features";
+import Contact from "@/pages/Contact";
+import FAQ from "@/pages/FAQ";
+import { driverSidebarItems } from "./DriverSidebarItems";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +24,18 @@ export const router = createBrowserRouter([
       {
         Component: About,
         path: "/about",
+      },
+      {
+        Component: Features,
+        path: "/features",
+      },
+      {
+        Component: Contact,
+        path: "/contact",
+      },
+      {
+        Component: FAQ,
+        path: "/faq",
       },
     ],
   },
@@ -34,11 +50,20 @@ export const router = createBrowserRouter([
   },
 
   {
-    Component: withAuth(DashboardLayout, role.user as TRole),
+    Component: withAuth(DashboardLayout, role.rider as TRole),
     path: "/rider",
     children: [
       { index: true, element: <Navigate to="/rider/bookings" /> },
       ...generateRoutes(riderSidebarItems),
+    ],
+  },
+
+  {
+    Component: withAuth(DashboardLayout, role.driver as TRole),
+    path: "/driver",
+    children: [
+      { index: true, element: <Navigate to="/driver/active-ride" /> },
+      ...generateRoutes(driverSidebarItems),
     ],
   },
 
