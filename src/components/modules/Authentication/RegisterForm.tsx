@@ -173,7 +173,9 @@ export function RegisterForm({
           </span>
         </div>
         <Button
-          onClick={() => window.open(`${config.baseUrl}/auth/google`)}
+          onClick={() =>
+            (window.location.href = `${config.baseUrl}/auth/google`)
+          }
           type="button"
           variant="outline"
           className="w-full cursor-pointer"
