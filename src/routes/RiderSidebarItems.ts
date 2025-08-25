@@ -1,4 +1,4 @@
-import DriverRequest from "@/pages/Admin/DriverRequest";
+import DriverRequest from "@/pages/Rider/DriverRequest";
 import RequestRide from "@/pages/Rider/RequestRide";
 import type { ISidebarItem } from "@/types";
 
