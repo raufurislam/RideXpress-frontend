@@ -25,13 +25,15 @@ import {
 } from "@/redux/features/auth/auth.api";
 import { FcGoogle } from "react-icons/fc";
 import config from "@/config";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Car, User } from "lucide-react";
 
 const registerSchema = z
   .object({
@@ -101,9 +103,9 @@ export function RegisterForm({
   return (
     <div className={cn("flex flex-col gap-6", className)}>
       <div className="flex flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold">Register your account</h1>
+        <h1 className="text-2xl font-bold">Create Account</h1>
         <p className="text-sm text-muted-foreground">
-          Enter your details to create an account
+          Create your account to get started
         </p>
       </div>
 
@@ -114,6 +116,45 @@ export function RegisterForm({
             className="space-y-6"
             {...props}
           >
+            {/* Role selector buttons */}
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => {
+                const selectedRole = form.watch("role");
+                return (
+                  <FormItem>
+                    <Label className="text-sm font-medium">I want to</Label>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant={
+                          selectedRole === "RIDER" ? "default" : "outline"
+                        }
+                        onClick={() => field.onChange("RIDER")}
+                        aria-pressed={selectedRole === "RIDER"}
+                      >
+                        <User className="w-4 h-4" />
+                        Get Rides
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={
+                          selectedRole === "DRIVER" ? "default" : "outline"
+                        }
+                        onClick={() => field.onChange("DRIVER")}
+                        aria-pressed={selectedRole === "DRIVER"}
+                      >
+                        <Car className="w-4 h-4" />
+                        Drive & Earn
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+
             <FormField
               control={form.control}
               name="name"
@@ -152,7 +193,7 @@ export function RegisterForm({
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="role"
               render={({ field }) => (
@@ -175,7 +216,7 @@ export function RegisterForm({
                   <FormMessage />
                 </FormItem>
               )}
-            />
+            /> */}
 
             <FormField
               control={form.control}
