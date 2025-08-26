@@ -3,6 +3,13 @@ import type { ComponentType } from "react";
 
 export type { IRegister, ILogin } from "./auth.type";
 export type { IUser } from "./user.type";
+export type {
+  IDriverApplication,
+  IDriver,
+  Availability,
+  DriverStatus,
+  VehicleType,
+} from "./driver.type";
 
 export interface IResponse<T> {
   statusCode: number;
