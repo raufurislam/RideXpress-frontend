@@ -15,12 +15,17 @@ import Features from "@/pages/Features";
 import Contact from "@/pages/Contact";
 import FAQ from "@/pages/FAQ";
 import { driverSidebarItems } from "./DriverSidebarItems";
+import Homepage from "@/pages/Homepage";
 
 export const router = createBrowserRouter([
   {
     Component: App,
     path: "/",
     children: [
+      {
+        Component: Homepage,
+        index: true,
+      },
       {
         Component: About,
         path: "/about",

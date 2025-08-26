@@ -1,0 +1,664 @@
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Search,
+  Filter,
+  MoreHorizontal,
+  Car,
+  Bike,
+  Truck,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import { toast } from "sonner";
+
+// Constants
+const DRIVER_STATUS = {
+  PENDING: "PENDING",
+  APPROVED: "APPROVED",
+  REJECTED: "REJECTED",
+} as const;
+
+const AVAILABILITY = {
+  AVAILABLE: "AVAILABLE",
+  UNAVAILABLE: "UNAVAILABLE",
+} as const;
+
+const VEHICLE_TYPE = {
+  CAR: "CAR",
+  BIKE: "BIKE",
+  VAN: "VAN",
+} as const;
+
+// Types
+type DriverStatus = (typeof DRIVER_STATUS)[keyof typeof DRIVER_STATUS];
+type Availability = (typeof AVAILABILITY)[keyof typeof AVAILABILITY];
+type VehicleType = (typeof VEHICLE_TYPE)[keyof typeof VEHICLE_TYPE];
+
+interface Driver {
+  _id: string;
+  userId: string;
+  vehicleType: VehicleType;
+  vehicleModel: string;
+  vehicleNumber: string;
+  licenseNumber: string;
+  status: DriverStatus;
+  availability: Availability;
+  appliedAt: string;
+  approvedAt?: string;
+  earnings: number;
+}
+
+interface FilterState {
+  search: string;
+  status: string | "all";
+  availability: string | "all";
+  vehicleType: string | "all";
+}
+
+interface SortConfig {
+  key: keyof Driver;
+  direction: "asc" | "desc";
+}
+
+// Mock data for demonstration (replace with actual API calls)
+const mockDrivers: Driver[] = [
+  {
+    _id: "1",
+    userId: "user1",
+    vehicleType: "CAR",
+    vehicleModel: "Toyota Camry",
+    vehicleNumber: "ABC-123",
+    licenseNumber: "DL123456",
+    status: "PENDING",
+    availability: "UNAVAILABLE",
+    appliedAt: "2024-01-15T10:00:00Z",
+    earnings: 0,
+  },
+  {
+    _id: "2",
+    userId: "user2",
+    vehicleType: "BIKE",
+    vehicleModel: "Honda CBR",
+    vehicleNumber: "XYZ-789",
+    licenseNumber: "DL789012",
+    status: "APPROVED",
+    availability: "AVAILABLE",
+    appliedAt: "2024-01-10T09:00:00Z",
+    approvedAt: "2024-01-12T14:00:00Z",
+    earnings: 150.5,
+  },
+  {
+    _id: "3",
+    userId: "user3",
+    vehicleType: "VAN",
+    vehicleModel: "Ford Transit",
+    vehicleNumber: "DEF-456",
+    licenseNumber: "DL345678",
+    status: "REJECTED",
+    availability: "UNAVAILABLE",
+    appliedAt: "2024-01-08T11:00:00Z",
+    earnings: 0,
+  },
+];
+
+const AllDriver: React.FC = () => {
+  // State management
+  const [filters, setFilters] = useState<FilterState>({
+    search: "",
+    status: "all",
+    availability: "all",
+    vehicleType: "all",
+  });
+
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
+
+  // Filter and sort drivers
+  const filteredAndSortedDrivers = useMemo(() => {
+    const filtered = drivers.filter((driver) => {
+      const matchesSearch =
+        filters.search === "" ||
+        driver.vehicleModel
+          .toLowerCase()
+          .includes(filters.search.toLowerCase()) ||
+        driver.vehicleNumber
+          .toLowerCase()
+          .includes(filters.search.toLowerCase()) ||
+        driver.licenseNumber
+          .toLowerCase()
+          .includes(filters.search.toLowerCase());
+
+      const matchesStatus =
+        filters.status === "all" || driver.status === filters.status;
+      const matchesAvailability =
+        filters.availability === "all" ||
+        driver.availability === filters.availability;
+      const matchesVehicleType =
+        filters.vehicleType === "all" ||
+        driver.vehicleType === filters.vehicleType;
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesAvailability &&
+        matchesVehicleType
+      );
+    });
+
+    // Sort drivers
+    if (sortConfig) {
+      const sorted = [...filtered].sort((a, b) => {
+        const aValue = a[sortConfig.key];
+        const bValue = b[sortConfig.key];
+
+        if (aValue === undefined || bValue === undefined) return 0;
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+      return sorted;
+    }
+
+    return filtered;
+  }, [drivers, filters, sortConfig]);
+
+  // Handlers
+  const handleSort = (key: keyof Driver) => {
+    setSortConfig((current) => {
+      if (current?.key === key) {
+        return {
+          key,
+          direction: current.direction === "asc" ? "desc" : "asc",
+        };
+      }
+      return { key, direction: "asc" };
+    });
+  };
+
+  const handleStatusUpdate = async (
+    driverId: string,
+    newStatus: DriverStatus
+  ) => {
+    setIsLoading(true);
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setDrivers((prev) =>
+        prev.map((driver) =>
+          driver._id === driverId ? { ...driver, status: newStatus } : driver
+        )
+      );
+
+      toast.success(`Driver status updated to ${newStatus}`);
+    } catch (error) {
+      toast.error("Failed to update driver status");
+      console.error("Error updating driver status:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getStatusBadgeVariant = (status: DriverStatus) => {
+    switch (status) {
+      case "APPROVED":
+        return "success";
+      case "REJECTED":
+        return "destructive";
+      case "PENDING":
+        return "pending";
+      default:
+        return "default";
+    }
+  };
+
+  const getAvailabilityBadgeVariant = (availability: Availability) => {
+    switch (availability) {
+      case "AVAILABLE":
+        return "available";
+      case "UNAVAILABLE":
+        return "unavailable";
+      default:
+        return "default";
+    }
+  };
+
+  const getVehicleIcon = (vehicleType: VehicleType) => {
+    switch (vehicleType) {
+      case "CAR":
+        return <Car className="h-4 w-4" />;
+      case "BIKE":
+        return <Bike className="h-4 w-4" />;
+      case "VAN":
+        return <Truck className="h-4 w-4" />;
+      default:
+        return <Car className="h-4 w-4" />;
+    }
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      status: "all",
+      availability: "all",
+      vehicleType: "all",
+    });
+    setSortConfig(null);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading drivers...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">All Drivers</h1>
+          <p className="text-muted-foreground">
+            Manage and monitor all driver applications
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={clearFilters}>
+            Clear Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Filters Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters & Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Search */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Search</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search drivers..."
+                  value={filters.search}
+                  onChange={(e) =>
+                    setFilters({ ...filters, search: e.target.value })
+                  }
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Status</label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) =>
+                  setFilters({ ...filters, status: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  {Object.entries(DRIVER_STATUS).map(([key, value]) => (
+                    <SelectItem key={key} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Availability Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Availability</label>
+              <Select
+                value={filters.availability}
+                onValueChange={(value) =>
+                  setFilters({ ...filters, availability: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Availability</SelectItem>
+                  {Object.entries(AVAILABILITY).map(([key, value]) => (
+                    <SelectItem key={key} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Vehicle Type Filter */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Vehicle Type</label>
+              <Select
+                value={filters.vehicleType}
+                onValueChange={(value) =>
+                  setFilters({ ...filters, vehicleType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Vehicle Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Vehicle Types</SelectItem>
+                  {Object.entries(VEHICLE_TYPE).map(([key, value]) => (
+                    <SelectItem key={key} value={value}>
+                      {value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results Summary */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          Showing {filteredAndSortedDrivers.length} of {drivers.length} drivers
+        </p>
+        {sortConfig && (
+          <p className="text-sm text-muted-foreground">
+            Sorted by {sortConfig.key} ({sortConfig.direction})
+          </p>
+        )}
+      </div>
+
+      {/* Drivers Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("vehicleType")}
+                >
+                  <div className="flex items-center gap-2">
+                    Vehicle Type
+                    {sortConfig?.key === "vehicleType" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("vehicleModel")}
+                >
+                  <div className="flex items-center gap-2">
+                    Model
+                    {sortConfig?.key === "vehicleModel" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("vehicleNumber")}
+                >
+                  <div className="flex items-center gap-2">
+                    Vehicle Number
+                    {sortConfig?.key === "vehicleNumber" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead>License Number</TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("status")}
+                >
+                  <div className="flex items-center gap-2">
+                    Status
+                    {sortConfig?.key === "status" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("availability")}
+                >
+                  <div className="flex items-center gap-2">
+                    Availability
+                    {sortConfig?.key === "availability" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("appliedAt")}
+                >
+                  <div className="flex items-center gap-2">
+                    Applied Date
+                    {sortConfig?.key === "appliedAt" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => handleSort("earnings")}
+                >
+                  <div className="flex items-center gap-2">
+                    Earnings
+                    {sortConfig?.key === "earnings" && (
+                      <span className="text-xs">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </div>
+                </TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAndSortedDrivers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Search className="h-8 w-8" />
+                      <p>No drivers found matching your criteria</p>
+                      <Button variant="outline" onClick={clearFilters}>
+                        Clear Filters
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredAndSortedDrivers.map((driver) => (
+                  <TableRow
+                    key={driver._id}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getVehicleIcon(driver.vehicleType)}
+                        <span className="font-medium">
+                          {driver.vehicleType}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {driver.vehicleModel}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {driver.vehicleNumber}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {driver.licenseNumber}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(driver.status)}>
+                        {driver.status === "PENDING" && (
+                          <Clock className="h-3 w-3 mr-1" />
+                        )}
+                        {driver.status === "APPROVED" && (
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                        )}
+                        {driver.status === "REJECTED" && (
+                          <XCircle className="h-3 w-3 mr-1" />
+                        )}
+                        {driver.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={getAvailabilityBadgeVariant(
+                          driver.availability
+                        )}
+                      >
+                        {driver.availability}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(driver.appliedAt)}</TableCell>
+                    <TableCell>
+                      <span className="font-mono">
+                        {formatCurrency(driver.earnings)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {driver.status === "PENDING" && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "APPROVED")
+                                }
+                                className="text-green-600 focus:text-green-600"
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "REJECTED")
+                                }
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                Reject
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {driver.status === "APPROVED" && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusUpdate(driver._id, "REJECTED")
+                              }
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Revoke Approval
+                            </DropdownMenuItem>
+                          )}
+                          {driver.status === "REJECTED" && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleStatusUpdate(driver._id, "APPROVED")
+                              }
+                              className="text-green-600 focus:text-green-600"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Approve
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default AllDriver;

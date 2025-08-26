@@ -1,3 +1,4 @@
+import AllDriver from "@/pages/Admin/AllDriver";
 import Analytics from "@/pages/Analytics";
 import type { ISidebarItem } from "@/types";
 // import { lazy } from "react";
@@ -12,6 +13,11 @@ export const adminSidebarItems: ISidebarItem[] = [
         title: "Analytics",
         url: "/admin/analytics",
         component: Analytics,
+      },
+      {
+        title: "All Driver",
+        url: "/admin/all-driver", // shadcn component table with update mechanism and all driver get with api. then update. sort all thing on filter section beautifully.
+        component: AllDriver,
       },
     ],
   },

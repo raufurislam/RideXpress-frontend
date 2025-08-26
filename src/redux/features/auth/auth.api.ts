@@ -10,7 +10,7 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         data: userInfo,
       }),
-      invalidatesTags: ["USER"], // ensure userInfo refetches
+      invalidatesTags: ["USER"],
     }),
 
     login: builder.mutation<IResponse<IUser>, ILogin>({
@@ -19,7 +19,7 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         data: userInfo,
       }),
-      invalidatesTags: ["USER"], // ensure userInfo refetches
+      invalidatesTags: ["USER"],
     }),
 
     logout: builder.mutation({
