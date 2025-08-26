@@ -29,7 +29,10 @@ import { TriangleAlert } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
 import { z } from "zod";
-import { useApplyDriverMutation } from "@/redux/features/auth/driver.api";
+import {
+  useApplyDriverMutation,
+  useDriverApplicationQuery,
+} from "@/redux/features/auth/driver.api";
 import { useEffect } from "react";
 import {
   useUpdateUserMutation,
@@ -55,6 +58,8 @@ export default function DriverRequest() {
 
   const { data: userInfoResponse } = useUserInfoQuery();
   const [updateUser] = useUpdateUserMutation();
+  const { data: driverApplications, refetch: refetchDriverApplications } =
+    useDriverApplicationQuery();
 
   const form = useForm<z.infer<typeof driverRequestSchema>>({
     resolver: zodResolver(driverRequestSchema),
@@ -84,6 +89,11 @@ export default function DriverRequest() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userInfoResponse]);
 
+  const userRole = userInfoResponse?.data?.role;
+  const myStatus = driverApplications?.data?.data?.find(
+    (d) => d.userId === userInfoResponse?.data?._id
+  )?.status;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (data: any) => {
     try {
@@ -103,6 +113,7 @@ export default function DriverRequest() {
       };
       const res = await applyDriver(driverPayload).unwrap();
       console.log("Driver application submitted successfully:", res);
+      await refetchDriverApplications();
     } catch (e) {
       console.error("Failed to submit driver application:", e);
     }
@@ -122,147 +133,190 @@ export default function DriverRequest() {
           User.
         </p>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Driver Application</CardTitle>
-          <CardDescription>
-            Please provide your vehicle information to apply for driver status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isError ? (
-            <div className="mb-4 rounded-md border border-red-500/50 px-4 py-2 text-red-600 text-sm">
-              Failed to submit application. Please try again.
+      {userRole === "DRIVER" || myStatus === "PENDING" ? (
+        <Card className="overflow-hidden">
+          <CardHeader className="text-center">
+            <CardTitle>
+              {userRole === "DRIVER"
+                ? "You are approved as a Driver"
+                : "Your application is under review"}
+            </CardTitle>
+            <CardDescription>
+              {userRole === "DRIVER"
+                ? "Welcome aboard. You can access driver features in your dashboard."
+                : "Thanks for applying! Our team is verifying your details. This typically takes 24–48 hours."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center gap-4 py-2">
+              <div className="h-2 w-full max-w-sm overflow-hidden rounded-full bg-muted">
+                <div className="h-full w-1/2 animate-pulse rounded-full bg-amber-500/70" />
+              </div>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>
+                  • Keep your phone reachable for a quick verification call
+                </li>
+                <li>• You can continue riding while you wait</li>
+                <li>• We’ll notify you once you’re approved</li>
+              </ul>
             </div>
-          ) : null}
-          {isSuccess ? (
-            <div className="mb-4 rounded-md border border-emerald-500/50 px-4 py-2 text-emerald-600 text-sm">
-              Application submitted successfully.
-            </div>
-          ) : null}
-          <Form {...form}>
-            <form
-              id="driver-application-form"
-              className="space-y-5"
-              onSubmit={form.handleSubmit(handleSubmit)}
-            >
-              {/* Vehicle Type */}
-              <FormField
-                control={form.control}
-                name="vehicleType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Vehicle Type</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select vehicle type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {Object.values(VEHICLE_TYPE).map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="vehicleModel"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Vehicle Model</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g., Honda Civic, Toyota Camry"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="licenseNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>License Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your driver's license number"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="vehicleNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Vehicle Number</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter your vehicle registration number"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />{" "}
-              {/* Phone */}
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {/* Address */}
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isLoading} className="w-full">
-                {isLoading ? "Submitting..." : "Submit Application"}
+          </CardContent>
+          <CardFooter className="justify-center">
+            {userRole !== "DRIVER" ? (
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Refresh Status
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter>
-          <p className="text-xs text-muted-foreground">
-            After approval, your role will be updated to DRIVER.
-          </p>
-        </CardFooter>
-      </Card>
+            ) : null}
+          </CardFooter>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Driver Application</CardTitle>
+            <CardDescription>
+              Please provide your vehicle information to apply for driver status
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isError ? (
+              <div className="mb-4 rounded-md border border-red-500/50 px-4 py-2 text-red-600 text-sm">
+                Failed to submit application. Please try again.
+              </div>
+            ) : null}
+            {isSuccess ? (
+              <div className="mb-4 rounded-md border border-emerald-500/50 px-4 py-2 text-emerald-600 text-sm">
+                Application submitted successfully.
+              </div>
+            ) : null}
+            <Form {...form}>
+              <form
+                id="driver-application-form"
+                className="space-y-5"
+                onSubmit={form.handleSubmit(handleSubmit)}
+              >
+                {/* Vehicle Type */}
+                <FormField
+                  control={form.control}
+                  name="vehicleType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vehicle Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select vehicle type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.values(VEHICLE_TYPE).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vehicleModel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vehicle Model</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Honda Civic, Toyota Camry"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="licenseNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>License Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your driver's license number"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="vehicleNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vehicle Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your vehicle registration number"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />{" "}
+                {/* Phone */}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your phone number"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                {/* Address */}
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isLoading} className="w-full">
+                  {isLoading ? "Submitting..." : "Submit Application"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter>
+            <p className="text-xs text-muted-foreground">
+              After approval, your role will be updated to DRIVER.
+            </p>
+          </CardFooter>
+        </Card>
+      )}
     </div>
   );
 }

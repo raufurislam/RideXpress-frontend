@@ -12,7 +12,18 @@ export const driverApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["USER"],
     }),
+
+    driverApplication: builder.query<
+      IResponse<{ data: IDriver[]; meta?: unknown }>,
+      void
+    >({
+      query: () => ({
+        url: "/driver/driver-application",
+        method: "GET",
+      }),
+      providesTags: ["USER"],
+    }),
   }),
 });
 
-export const { useApplyDriverMutation } = driverApi;
+export const { useApplyDriverMutation, useDriverApplicationQuery } = driverApi;
