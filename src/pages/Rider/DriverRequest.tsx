@@ -30,12 +30,19 @@ import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
 import { z } from "zod";
 import { useApplyDriverMutation } from "@/redux/features/auth/driver.api";
+import { useEffect } from "react";
+import {
+  useUpdateUserMutation,
+  useUserInfoQuery,
+} from "@/redux/features/auth/auth.api";
 
 const driverRequestSchema = z.object({
   vehicleType: z.string().min(1, "Vehicle type is required"),
   vehicleModel: z.string().min(1, "Vehicle model is required"),
   licenseNumber: z.string().min(1, "License number is required"),
   vehicleNumber: z.string().min(1, "Vehicle number is required"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
 });
 
 export default function DriverRequest() {
@@ -46,6 +53,9 @@ export default function DriverRequest() {
   const [applyDriver, { isLoading, isError, isSuccess }] =
     useApplyDriverMutation();
 
+  const { data: userInfoResponse } = useUserInfoQuery();
+  const [updateUser] = useUpdateUserMutation();
+
   const form = useForm<z.infer<typeof driverRequestSchema>>({
     resolver: zodResolver(driverRequestSchema),
     defaultValues: {
@@ -53,13 +63,45 @@ export default function DriverRequest() {
       vehicleModel: "",
       licenseNumber: "",
       vehicleNumber: "",
+      phone: "",
+      address: "",
     },
   });
+
+  // Prefill phone and address from profile if available
+  useEffect(() => {
+    const profile = userInfoResponse?.data;
+    if (profile) {
+      form.reset({
+        vehicleType: form.getValues("vehicleType"),
+        vehicleModel: form.getValues("vehicleModel"),
+        licenseNumber: form.getValues("licenseNumber"),
+        vehicleNumber: form.getValues("vehicleNumber"),
+        phone: profile.phone ?? "",
+        address: profile.address ?? "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userInfoResponse]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (data: any) => {
     try {
-      const res = await applyDriver(data).unwrap();
+      // Update user phone/address if provided
+      const user = userInfoResponse?.data;
+      if (user && (data.phone || data.address)) {
+        await updateUser({
+          userId: user._id,
+          payload: { phone: data.phone, address: data.address },
+        }).unwrap();
+      }
+      const driverPayload = {
+        vehicleType: data.vehicleType,
+        vehicleModel: data.vehicleModel,
+        licenseNumber: data.licenseNumber,
+        vehicleNumber: data.vehicleNumber,
+      };
+      const res = await applyDriver(driverPayload).unwrap();
       console.log("Driver application submitted successfully:", res);
     } catch (e) {
       console.error("Failed to submit driver application:", e);
@@ -181,6 +223,34 @@ export default function DriverRequest() {
                   </FormItem>
                 )}
               />{" "}
+              {/* Phone */}
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {/* Address */}
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter your address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" disabled={isLoading} className="w-full">
                 {isLoading ? "Submitting..." : "Submit Application"}
               </Button>

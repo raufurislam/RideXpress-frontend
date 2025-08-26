@@ -30,12 +30,24 @@ export const authApi = baseApi.injectEndpoints({
       invalidatesTags: ["USER"],
     }),
 
-    userInfo: builder.query({
+    userInfo: builder.query<IResponse<IUser>, void>({
       query: () => ({
         url: "/user/me",
         method: "GET",
       }),
       providesTags: ["USER"],
+    }),
+
+    updateUser: builder.mutation<
+      IResponse<IUser>,
+      { userId: string; payload: Partial<IUser> }
+    >({
+      query: ({ userId, payload }) => ({
+        url: `/user/${userId}`,
+        method: "PATCH",
+        data: payload,
+      }),
+      invalidatesTags: ["USER"],
     }),
   }),
 });
@@ -46,4 +58,5 @@ export const {
   useLogoutMutation,
   useUserInfoQuery,
   useLazyUserInfoQuery,
+  useUpdateUserMutation,
 } = authApi;
