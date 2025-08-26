@@ -12,7 +12,7 @@ export interface IDriver {
   vehicleModel: string;
   vehicleNumber: string;
   licenseNumber: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPEND";
   availability: "AVAILABLE" | "UNAVAILABLE";
   appliedAt: Date;
   approvedAt?: Date;
@@ -31,6 +31,7 @@ export const DRIVER_STATUS = {
   PENDING: "PENDING",
   APPROVED: "APPROVED",
   REJECTED: "REJECTED",
+  SUSPEND: "SUSPEND",
 } as const;
 
 export type DriverStatus = (typeof DRIVER_STATUS)[keyof typeof DRIVER_STATUS];

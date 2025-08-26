@@ -36,6 +36,7 @@ import {
   Clock,
   Loader2,
   RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -181,6 +182,8 @@ const AllDriver: React.FC = () => {
         return "destructive";
       case "PENDING":
         return "pending";
+      case "SUSPEND":
+        return "warning";
       default:
         return "default";
     }
@@ -560,6 +563,9 @@ const AllDriver: React.FC = () => {
                         {driver.status === "REJECTED" && (
                           <XCircle className="h-3 w-3 mr-1" />
                         )}
+                        {driver.status === "SUSPEND" && (
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                        )}
                         {driver.status}
                       </Badge>
                     </TableCell>
@@ -609,31 +615,89 @@ const AllDriver: React.FC = () => {
                                 <XCircle className="h-4 w-4 mr-2" />
                                 {isUpdating ? "Updating..." : "Reject"}
                               </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "SUSPEND")
+                                }
+                                className="text-yellow-600 focus:text-yellow-600"
+                                disabled={isUpdating}
+                              >
+                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Suspend"}
+                              </DropdownMenuItem>
                             </>
                           )}
                           {driver.status === "APPROVED" && (
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatusUpdate(driver._id, "REJECTED")
-                              }
-                              className="text-red-600 focus:text-red-600"
-                              disabled={isUpdating}
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              {isUpdating ? "Updating..." : "Revoke Approval"}
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "REJECTED")
+                                }
+                                className="text-red-600 focus:text-red-600"
+                                disabled={isUpdating}
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Revoke Approval"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "SUSPEND")
+                                }
+                                className="text-yellow-600 focus:text-yellow-600"
+                                disabled={isUpdating}
+                              >
+                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Suspend"}
+                              </DropdownMenuItem>
+                            </>
                           )}
                           {driver.status === "REJECTED" && (
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatusUpdate(driver._id, "APPROVED")
-                              }
-                              className="text-green-600 focus:text-green-600"
-                              disabled={isUpdating}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              {isUpdating ? "Updating..." : "Approve"}
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "APPROVED")
+                                }
+                                className="text-green-600 focus:text-green-600"
+                                disabled={isUpdating}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Approve"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "SUSPEND")
+                                }
+                                className="text-yellow-600 focus:text-yellow-600"
+                                disabled={isUpdating}
+                              >
+                                <AlertTriangle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Suspend"}
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {driver.status === "SUSPEND" && (
+                            <>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "APPROVED")
+                                }
+                                className="text-green-600 focus:text-green-600"
+                                disabled={isUpdating}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Approve"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatusUpdate(driver._id, "REJECTED")
+                                }
+                                className="text-red-600 focus:text-red-600"
+                                disabled={isUpdating}
+                              >
+                                <XCircle className="h-4 w-4 mr-2" />
+                                {isUpdating ? "Updating..." : "Reject"}
+                              </DropdownMenuItem>
+                            </>
                           )}
                         </DropdownMenuContent>
                       </DropdownMenu>
