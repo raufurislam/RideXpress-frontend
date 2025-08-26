@@ -23,12 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { VEHICLE_TYPE } from "@/constants/vehicleType";
+import { VEHICLE_TYPE } from "@/types/driver.type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TriangleAlert } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "react-router";
-import z from "zod";
+import { z } from "zod";
+import { useApplyDriverMutation } from "@/redux/features/auth/driver.api";
 
 const driverRequestSchema = z.object({
   vehicleType: z.string().min(1, "Vehicle type is required"),
@@ -42,6 +43,9 @@ export default function DriverRequest() {
   const basicInfo = location.state; // { name, email, password }
   console.log("Driver request", basicInfo);
 
+  const [applyDriver, { isLoading, isError, isSuccess }] =
+    useApplyDriverMutation();
+
   const form = useForm<z.infer<typeof driverRequestSchema>>({
     resolver: zodResolver(driverRequestSchema),
     defaultValues: {
@@ -54,7 +58,12 @@ export default function DriverRequest() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSubmit = async (data: any) => {
-    console.log(data);
+    try {
+      const res = await applyDriver(data).unwrap();
+      console.log("Driver application submitted successfully:", res);
+    } catch (e) {
+      console.error("Failed to submit driver application:", e);
+    }
   };
   return (
     <div className="w-full max-w-2xl mx-auto px-5 mt-16">
@@ -80,6 +89,16 @@ export default function DriverRequest() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {isError ? (
+            <div className="mb-4 rounded-md border border-red-500/50 px-4 py-2 text-red-600 text-sm">
+              Failed to submit application. Please try again.
+            </div>
+          ) : null}
+          {isSuccess ? (
+            <div className="mb-4 rounded-md border border-emerald-500/50 px-4 py-2 text-emerald-600 text-sm">
+              Application submitted successfully.
+            </div>
+          ) : null}
           <Form {...form}>
             <form
               id="driver-application-form"
@@ -162,13 +181,8 @@ export default function DriverRequest() {
                   </FormItem>
                 )}
               />{" "}
-              <Button
-                type="submit"
-                // disabled={isLoading}
-                className="w-full"
-              >
-                {/* {isLoading ? "Submitting..." : "Submit Application"} */}
-                submit
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading ? "Submitting..." : "Submit Application"}
               </Button>
             </form>
           </Form>
