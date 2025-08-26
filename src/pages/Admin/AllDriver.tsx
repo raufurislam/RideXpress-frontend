@@ -35,45 +35,24 @@ import {
   XCircle,
   Clock,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  useGetAllDriversQuery,
+  useUpdateDriverStatusMutation,
+} from "@/redux/features/admin/admin.api";
+import {
+  type IDriver,
+  type DriverStatus,
+  type Availability,
+  DRIVER_STATUS,
+  AVAILABILITY,
+  VEHICLE_TYPE,
+} from "@/types/driver.type";
 
-// Constants
-const DRIVER_STATUS = {
-  PENDING: "PENDING",
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
-} as const;
-
-const AVAILABILITY = {
-  AVAILABLE: "AVAILABLE",
-  UNAVAILABLE: "UNAVAILABLE",
-} as const;
-
-const VEHICLE_TYPE = {
-  CAR: "CAR",
-  BIKE: "BIKE",
-  VAN: "VAN",
-} as const;
-
-// Types
-type DriverStatus = (typeof DRIVER_STATUS)[keyof typeof DRIVER_STATUS];
-type Availability = (typeof AVAILABILITY)[keyof typeof AVAILABILITY];
-type VehicleType = (typeof VEHICLE_TYPE)[keyof typeof VEHICLE_TYPE];
-
-interface Driver {
-  _id: string;
-  userId: string;
-  vehicleType: VehicleType;
-  vehicleModel: string;
-  vehicleNumber: string;
-  licenseNumber: string;
-  status: DriverStatus;
-  availability: Availability;
-  appliedAt: string;
-  approvedAt?: string;
-  earnings: number;
-}
+// Use the existing types from the types file
+type Driver = IDriver;
 
 interface FilterState {
   search: string;
@@ -87,48 +66,19 @@ interface SortConfig {
   direction: "asc" | "desc";
 }
 
-// Mock data for demonstration (replace with actual API calls)
-const mockDrivers: Driver[] = [
-  {
-    _id: "1",
-    userId: "user1",
-    vehicleType: "CAR",
-    vehicleModel: "Toyota Camry",
-    vehicleNumber: "ABC-123",
-    licenseNumber: "DL123456",
-    status: "PENDING",
-    availability: "UNAVAILABLE",
-    appliedAt: "2024-01-15T10:00:00Z",
-    earnings: 0,
-  },
-  {
-    _id: "2",
-    userId: "user2",
-    vehicleType: "BIKE",
-    vehicleModel: "Honda CBR",
-    vehicleNumber: "XYZ-789",
-    licenseNumber: "DL789012",
-    status: "APPROVED",
-    availability: "AVAILABLE",
-    appliedAt: "2024-01-10T09:00:00Z",
-    approvedAt: "2024-01-12T14:00:00Z",
-    earnings: 150.5,
-  },
-  {
-    _id: "3",
-    userId: "user3",
-    vehicleType: "VAN",
-    vehicleModel: "Ford Transit",
-    vehicleNumber: "DEF-456",
-    licenseNumber: "DL345678",
-    status: "REJECTED",
-    availability: "UNAVAILABLE",
-    appliedAt: "2024-01-08T11:00:00Z",
-    earnings: 0,
-  },
-];
+// API integration - no more mock data needed
 
 const AllDriver: React.FC = () => {
+  // API integration
+  const {
+    data: driversResponse,
+    isLoading,
+    error,
+    refetch,
+  } = useGetAllDriversQuery();
+  const [updateDriverStatus, { isLoading: isUpdating }] =
+    useUpdateDriverStatusMutation();
+
   // State management
   const [filters, setFilters] = useState<FilterState>({
     search: "",
@@ -138,8 +88,9 @@ const AllDriver: React.FC = () => {
   });
 
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [drivers, setDrivers] = useState<Driver[]>(mockDrivers);
+
+  // Extract drivers from API response
+  const drivers = driversResponse?.data?.data || [];
 
   // Filter and sort drivers
   const filteredAndSortedDrivers = useMemo(() => {
@@ -207,23 +158,18 @@ const AllDriver: React.FC = () => {
     driverId: string,
     newStatus: DriverStatus
   ) => {
-    setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      setDrivers((prev) =>
-        prev.map((driver) =>
-          driver._id === driverId ? { ...driver, status: newStatus } : driver
-        )
-      );
+      await updateDriverStatus({
+        driverId,
+        driverStatus: newStatus,
+      }).unwrap();
 
       toast.success(`Driver status updated to ${newStatus}`);
+      // Refetch data to get the latest state
+      refetch();
     } catch (error) {
       toast.error("Failed to update driver status");
       console.error("Error updating driver status:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -251,7 +197,7 @@ const AllDriver: React.FC = () => {
     }
   };
 
-  const getVehicleIcon = (vehicleType: VehicleType) => {
+  const getVehicleIcon = (vehicleType: string) => {
     switch (vehicleType) {
       case "CAR":
         return <Car className="h-4 w-4" />;
@@ -274,8 +220,9 @@ const AllDriver: React.FC = () => {
     setSortConfig(null);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === "string" ? new Date(date) : date;
+    return dateObj.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -288,6 +235,32 @@ const AllDriver: React.FC = () => {
       currency: "USD",
     }).format(amount);
   };
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center text-red-600">
+              <XCircle className="h-12 w-12 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold">Error Loading Drivers</h3>
+              <p className="text-sm text-muted-foreground">
+                Failed to load driver data. Please try again later.
+              </p>
+              <Button
+                onClick={() => refetch()}
+                className="mt-4"
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // Loading state
   if (isLoading) {
@@ -312,6 +285,17 @@ const AllDriver: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
           <Button variant="outline" onClick={clearFilters}>
             Clear Filters
           </Button>
@@ -610,18 +594,20 @@ const AllDriver: React.FC = () => {
                                   handleStatusUpdate(driver._id, "APPROVED")
                                 }
                                 className="text-green-600 focus:text-green-600"
+                                disabled={isUpdating}
                               >
                                 <CheckCircle className="h-4 w-4 mr-2" />
-                                Approve
+                                {isUpdating ? "Updating..." : "Approve"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   handleStatusUpdate(driver._id, "REJECTED")
                                 }
                                 className="text-red-600 focus:text-red-600"
+                                disabled={isUpdating}
                               >
                                 <XCircle className="h-4 w-4 mr-2" />
-                                Reject
+                                {isUpdating ? "Updating..." : "Reject"}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -631,9 +617,10 @@ const AllDriver: React.FC = () => {
                                 handleStatusUpdate(driver._id, "REJECTED")
                               }
                               className="text-red-600 focus:text-red-600"
+                              disabled={isUpdating}
                             >
                               <XCircle className="h-4 w-4 mr-2" />
-                              Revoke Approval
+                              {isUpdating ? "Updating..." : "Revoke Approval"}
                             </DropdownMenuItem>
                           )}
                           {driver.status === "REJECTED" && (
@@ -642,9 +629,10 @@ const AllDriver: React.FC = () => {
                                 handleStatusUpdate(driver._id, "APPROVED")
                               }
                               className="text-green-600 focus:text-green-600"
+                              disabled={isUpdating}
                             >
                               <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
+                              {isUpdating ? "Updating..." : "Approve"}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>

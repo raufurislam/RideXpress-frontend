@@ -22,6 +22,7 @@ export interface IDriver {
 export const VEHICLE_TYPE = {
   CAR: "CAR",
   BIKE: "BIKE",
+  VAN: "VAN",
 } as const;
 
 export type VehicleType = (typeof VEHICLE_TYPE)[keyof typeof VEHICLE_TYPE];
