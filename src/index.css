@@ -1,9 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-html {
+/* html {
   overflow-y: scroll;
-}
+} */
 
 @custom-variant dark (&:is(.dark *));
 

@@ -25,10 +25,14 @@ import { role } from "@/constants/role";
 const navigationLinks = [
   { href: "/", label: "Home", role: "PUBLIC" },
   { href: "/about", label: "About", role: "PUBLIC" },
-  // { href: "/tours", label: "Tours", role: "PUBLIC" },
+  { href: "/features", label: "Features", role: "PUBLIC" },
+  { href: "/contact", label: "Contact", role: "PUBLIC" },
+  { href: "/faq", label: "FAQ", role: "PUBLIC" },
+
   { href: "/admin", label: "Dashboard", role: role.admin },
   { href: "/admin", label: "Dashboard", role: role.superAdmin },
-  { href: "/rider", label: "Dashboard", role: role.user },
+  { href: "/rider", label: "Dashboard", role: role.rider },
+  { href: "/driver", label: "Dashboard", role: role.driver },
 ];
 
 export default function Navbar() {
@@ -96,6 +100,7 @@ export default function Navbar() {
               </NavigationMenu>
             </PopoverContent>
           </Popover>
+
           {/* Main nav */}
           <div className="flex items-center gap-6">
             <Link to="/" className="text-primary hover:text-primary/90">
