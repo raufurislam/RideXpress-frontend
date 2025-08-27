@@ -16,7 +16,12 @@ export const adminSidebarItems: ISidebarItem[] = [
       },
       {
         title: "All Driver",
-        url: "/admin/all-driver", // shadcn component table with update mechanism and all driver get with api. then update. sort all thing on filter section beautifully.
+        url: "/admin/all-driver",
+        component: AllDriver,
+      },
+      {
+        title: "All Driver",
+        url: "/admin/all-driver",
         component: AllDriver,
       },
     ],

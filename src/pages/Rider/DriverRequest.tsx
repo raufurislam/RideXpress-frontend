@@ -57,7 +57,9 @@ export default function DriverRequest() {
     useApplyDriverMutation();
 
   const { data: userInfoResponse } = useUserInfoQuery();
+
   const [updateUser] = useUpdateUserMutation();
+  
   const { data: driverApplications, refetch: refetchDriverApplications } =
     useDriverApplicationQuery();
 
