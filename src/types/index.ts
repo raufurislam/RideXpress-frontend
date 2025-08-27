@@ -1,3 +1,5 @@
+export * from "./user.type";
+
 // types/types.ts
 import type { ComponentType } from "react";
 

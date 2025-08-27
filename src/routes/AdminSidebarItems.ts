@@ -1,4 +1,5 @@
 import AllDriver from "@/pages/Admin/AllDriver";
+import AllUser from "@/pages/Admin/AllUser";
 import Analytics from "@/pages/Analytics";
 import type { ISidebarItem } from "@/types";
 // import { lazy } from "react";
@@ -20,9 +21,9 @@ export const adminSidebarItems: ISidebarItem[] = [
         component: AllDriver,
       },
       {
-        title: "All Driver",
-        url: "/admin/all-driver",
-        component: AllDriver,
+        title: "All User",
+        url: "/admin/all-user",
+        component: AllUser,
       },
     ],
   },
