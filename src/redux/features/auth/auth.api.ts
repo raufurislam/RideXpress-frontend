@@ -121,11 +121,23 @@ export const authApi = baseApi.injectEndpoints({
       providesTags: ["USER"],
     }),
 
-    getAllUsers: builder.query({
-      query: () => ({
+    getAllUsers: builder.query<
+      IResponse<IUser[]>,
+      {
+        search?: string;
+        searchTerm?: string;
+        role?: string;
+        isActive?: string;
+        sortBy?: string;
+        sortOrder?: "asc" | "desc";
+        page?: number;
+        limit?: number;
+      }
+    >({
+      query: (params) => ({
         url: "/user/all-users",
         method: "GET",
-        // axiosBaseQuery will send these as querystring
+        params,
       }),
       providesTags: ["USER"],
     }),

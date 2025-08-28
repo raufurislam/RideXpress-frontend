@@ -19,7 +19,8 @@ export const IsActive = {
   ACTIVE: "ACTIVE",
   // INACTIVE: "INACTIVE",
   SUSPENDED: "SUSPENDED",
-  BLOCKED: "BLOCKED",
+  // Backend uses BLOCK (not BLOCKED)
+  BLOCK: "BLOCK",
 } as const;
 
 export type IsActive = (typeof IsActive)[keyof typeof IsActive];

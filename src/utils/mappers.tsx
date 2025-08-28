@@ -1,5 +1,5 @@
 // utils/mappers.ts
-import { Car, Bike, ShieldCheck, UserCog } from "lucide-react";
+import { Car, Bike, ShieldCheck, UserCog, Ban } from "lucide-react";
 import { IsActive, Role } from "@/types";
 import type { JSX } from "react";
 
@@ -43,9 +43,9 @@ export const statusMapper: Record<
     color: "bg-amber-100 text-amber-700",
     icon: <UserCog className="h-4 w-4" />,
   },
-  [IsActive.BLOCKED]: {
+  [IsActive.BLOCK]: {
     label: "Blocked",
     color: "bg-red-100 text-red-700",
-    icon: <Bike className="h-4 w-4" />,
+    icon: <Ban className="h-4 w-4" />,
   },
 };
