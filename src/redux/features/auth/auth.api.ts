@@ -121,28 +121,37 @@ export const authApi = baseApi.injectEndpoints({
       providesTags: ["USER"],
     }),
 
-    getAllUsers: builder.query<
-      IResponse<{
-        data: IUser[];
-        meta: { page: number; limit: number; total: number };
-      }>,
-      {
-        search?: string;
-        role?: string;
-        isActive?: string;
-        sortBy?: string;
-        sortOrder?: "asc" | "desc";
-        page?: number;
-        limit?: number;
-      }
-    >({
-      query: (params) => ({
+    getAllUsers: builder.query({
+      query: () => ({
         url: "/user/all-users",
         method: "GET",
-        params, // axiosBaseQuery will send these as querystring
+        // axiosBaseQuery will send these as querystring
       }),
       providesTags: ["USER"],
     }),
+
+    // getAllUsers: builder.query<
+    //   { data: IUser[]; meta: { page: number; limit: number; total: number } },
+    //   {
+    //     search?: string;
+    //     role?: string;
+    //     isActive?: string;
+    //     sortBy?: string;
+    //     sortOrder?: "asc" | "desc";
+    //     page?: number;
+    //     limit?: number;
+    //   }
+    // >({
+    //   query: (params) => ({
+    //     url: "/user/all-users",
+    //     method: "GET",
+    //     params, // axiosBaseQuery will send these as querystring
+    //   }),
+    //   transformResponse: (response: IResponseWithMeta<IUser[]>) => {
+    //     return { data: response.data, meta: response.meta };
+    //   },
+    //   providesTags: ["USER"],
+    // }),
 
     updateUser: builder.mutation<
       IResponse<IUser>,

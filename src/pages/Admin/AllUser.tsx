@@ -1,180 +1,72 @@
-// app/(admin)/users/AllUser.tsx OR wherever you keep it
-import { useEffect, useMemo, useState } from "react";
-import {
-  useGetAllUsersQuery,
-  useUpdateUserMutation,
-  useUserInfoQuery,
-} from "@/redux/features/auth/auth.api";
-import type { IUser } from "@/types";
-import { Role, IsActive } from "@/types";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardDescription,
-  CardFooter,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import {
-  Search,
-  Filter,
-  RefreshCw,
-  ShieldAlert,
-  ShieldCheck,
-  UserCog,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
-  ArrowUpDown,
-} from "lucide-react";
-import { toast } from "sonner";
 import clsx from "clsx";
-
-// Small helper for debounce
-function useDebounced<T>(value: T, delay = 500) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(t);
-  }, [value, delay]);
-  return debounced;
-}
-
-const ROLE_OPTIONS = Object.values(Role) as (keyof typeof Role)[];
-const STATUS_OPTIONS = Object.values(IsActive) as (keyof typeof IsActive)[];
-
-const roleDisabledReason = (
-  myRole: Role | undefined,
-  target: IUser | undefined
-) => {
-  if (!myRole || !target) return null;
-
-  // You cannot edit SUPER_ADMIN unless you are SUPER_ADMIN
-  if (target.role === Role.SUPER_ADMIN && myRole !== Role.SUPER_ADMIN) {
-    return "Only SUPER_ADMIN can change SUPER_ADMIN role";
-  }
-  // Optional: Prevent self-role change unless SUPER_ADMIN
-  if (myRole !== Role.SUPER_ADMIN && target._id === undefined) {
-    return "Cannot change your own role";
-  }
-  return null;
-};
+import { Button } from "@/components/ui/button";
+import { useGetAllUsersQuery } from "@/redux/features/auth/auth.api";
+import { ArrowUpDown, Loader2, RefreshCw, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { type IUser } from "@/types";
+import { roleMapper, statusMapper } from "@/utils/mappers";
 
 export default function AllUser() {
-  const ALL_OPTION = "ALL";
-
-  // Filters & sorting
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounced(search, 500);
-
-  const [role, setRole] = useState<string>("");
-  const [status, setStatus] = useState<string>("");
-
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20);
-
-  const [sortBy, setSortBy] = useState<string>("createdAt");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-
-  // Current user (for permissions)
-  const { data: me } = useUserInfoQuery();
-  const myRole = me?.data?.role as Role | undefined;
-  const myId = me?.data?._id;
-
-  const { data, isLoading, isError, refetch, isFetching } = useGetAllUsersQuery(
-    {
-      search: debouncedSearch || undefined,
-      role: role || undefined,
-      isActive: status || undefined,
-      sortBy,
-      sortOrder,
-      page,
-      limit,
-    }
+  const { data, isLoading, isFetching, refetch, isError } = useGetAllUsersQuery(
+    {}
   );
+  const users = data?.data ?? [];
+  const meta = data?.meta;
 
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  console.log(users); //data below. this data just show on my table this time
+  /**
+(4) [{…}, {…}, {…}, {…}]
+0
+0
+: 
+address
+: 
+"Nandina"
+auths
+: 
+[{…}]
+createdAt
+: 
+"2025-08-26T11:26:39.806Z"
+email
+: 
+"driver1@gmail.com"
+isActive
+: 
+"ACTIVE"
+isDeleted
+: 
+false
+isVerified
+: 
+true
+name
+: 
+"Driver1"
+password
+: 
+"$2b$10$RHWgArhOxchB54RcCMQKE.KQWu9YZl3yQGbx.mC3E6dbkT1D0caIS"
+phone
+: 
+"01700000003"
+role
+: 
+"DRIVER"
+updatedAt
+: 
+"2025-08-26T21:06:12.687Z"
+_id
+: 
+"68ad99ef8d22f61d3e43e6ff"
+*/
 
-  const users = useMemo(() => data?.data?.data ?? [], [data]);
-  const meta = data?.data?.meta ?? { page: 1, limit, total: users.length };
-
-  const totalItems = meta.total ?? users.length;
-  const pageFromMeta = meta.page ?? page;
-  const limitFromMeta = meta.limit ?? limit;
+  const totalItems = meta?.total ?? users.length;
+  const pageFromMeta = meta?.page ?? 1;
+  const limitFromMeta = meta?.limit ?? 10;
   const totalPages = Math.max(1, Math.ceil(totalItems / limitFromMeta));
 
-  const handleClear = () => {
-    setSearch("");
-    setRole("");
-    setStatus("");
-    setPage(1);
-    setSortBy("createdAt");
-    setSortOrder("desc");
-  };
-
-  const toggleSort = (key: string) => {
-    if (sortBy === key) {
-      setSortOrder((p) => (p === "asc" ? "desc" : "asc"));
-    } else {
-      setSortBy(key);
-      setSortOrder("asc");
-    }
-  };
-
-  const confirmChange = async (
-    user: IUser,
-    payload: Partial<IUser>,
-    text: string
-  ) => {
-    try {
-      await updateUser({ userId: user._id as string, payload }).unwrap();
-      toast.success(text);
-      refetch();
-    } catch (e: unknown) {
-      toast.error("Update failed");
-      console.error(e);
-    }
-  };
-
-  const onChangeRole = (user: IUser, nextRole: Role) => {
-    // Permission guards
-    if (user._id === myId && myRole !== Role.SUPER_ADMIN) {
-      return toast.error("You cannot change your own role.");
-    }
-    if (user.role === Role.SUPER_ADMIN && myRole !== Role.SUPER_ADMIN) {
-      return toast.error("Only SUPER_ADMIN can change SUPER_ADMIN role.");
-    }
-
-    const proceed = window.confirm(
-      `Change role for ${user.email} from ${user.role} → ${nextRole}?`
-    );
-    if (!proceed) return;
-    confirmChange(user, { role: nextRole }, "Role updated");
-  };
-
-  const onChangeStatus = (user: IUser, nextStatus: IsActive) => {
-    const critical =
-      nextStatus === IsActive.BLOCKED || nextStatus === IsActive.SUSPENDED;
-    const msg =
-      `Set status for ${user.email} to ${nextStatus}?` +
-      (critical ? " This may restrict account access." : "");
-    const proceed = window.confirm(msg);
-    if (!proceed) return;
-    confirmChange(user, { isActive: nextStatus }, "Status updated");
-  };
-
   return (
-    <div className="container mx-auto max-w-7xl p-6 space-y-6">
+    <div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -198,116 +90,14 @@ export default function AllUser() {
             />
             Refresh
           </Button>
-          <Button variant="outline" onClick={handleClear}>
-            Clear Filters
-          </Button>
+          <Button variant="outline">Clear Filters</Button>
         </div>
       </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters & Search
-          </CardTitle>
-          <CardDescription>
-            Search by email and filter by role or status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Search by email</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="e.g., user@example.com"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setPage(1);
-                  }}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* Role */}
-            <Select
-              value={role || ALL_OPTION}
-              onValueChange={(v) => {
-                setRole(v === ALL_OPTION ? "" : v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All roles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_OPTION}>All roles</SelectItem>
-                {ROLE_OPTIONS.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {r}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Status */}
-            <Select
-              value={status || ALL_OPTION}
-              onValueChange={(v) => {
-                setStatus(v === ALL_OPTION ? "" : v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_OPTION}>All status</SelectItem>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* Page size */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Page size</label>
-              <Select
-                value={String(limit)}
-                onValueChange={(v) => {
-                  setLimit(Number(v));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 20, 30, 50].map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Summary */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Showing page {pageFromMeta} of {totalPages} • {totalItems} user(s)
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Sorted by <span className="font-medium">{sortBy}</span> ({sortOrder})
         </p>
       </div>
 
@@ -320,7 +110,7 @@ export default function AllUser() {
                 <tr>
                   <th
                     className="px-4 py-3 cursor-pointer select-none"
-                    onClick={() => toggleSort("name")}
+                    // onClick={() => toggleSort("name")}
                   >
                     <div className="inline-flex items-center gap-1.5">
                       Name <ArrowUpDown className="h-3.5 w-3.5" />
@@ -328,7 +118,7 @@ export default function AllUser() {
                   </th>
                   <th
                     className="px-4 py-3 cursor-pointer select-none"
-                    onClick={() => toggleSort("email")}
+                    // onClick={() => toggleSort("email")}
                   >
                     <div className="inline-flex items-center gap-1.5">
                       Email <ArrowUpDown className="h-3.5 w-3.5" />
@@ -339,7 +129,7 @@ export default function AllUser() {
                   <th className="px-4 py-3">Status</th>
                   <th
                     className="px-4 py-3 cursor-pointer select-none"
-                    onClick={() => toggleSort("createdAt")}
+                    // onClick={() => toggleSort("createdAt")}
                   >
                     <div className="inline-flex items-center gap-1.5">
                       Created <ArrowUpDown className="h-3.5 w-3.5" />
@@ -369,158 +159,97 @@ export default function AllUser() {
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Search className="h-8 w-8" />
                         <p>No users found. Try adjusting filters.</p>
-                        <Button variant="outline" onClick={handleClear}>
-                          Clear Filters
-                        </Button>
+                        <Button variant="outline">Clear Filters</Button>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  users.map((u: IUser) => {
-                    const roleBlockMsg = roleDisabledReason(myRole, u);
-                    const cannotChangeRole =
-                      !!roleBlockMsg ||
-                      (u._id === myId && myRole !== Role.SUPER_ADMIN);
+                  users.map((u: IUser) => (
+                    <tr
+                      key={(u._id as unknown as string) || u.email}
+                      className="border-b hover:bg-muted/40 transition-colors"
+                    >
+                      {/* Name */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-muted grid place-items-center text-xs font-semibold">
+                            {u.name?.[0]?.toUpperCase() || "U"}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{u.name || "—"}</span>
+                          </div>
+                        </div>
+                      </td>
 
-                    return (
-                      <tr
-                        key={u._id}
-                        className="border-b hover:bg-muted/40 transition-colors"
-                      >
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-muted grid place-items-center text-xs font-semibold">
-                              {u.name?.[0]?.toUpperCase() || "U"}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{u.name}</span>
-                              {u.isVerified ? (
-                                <span className="text-[11px] text-emerald-600 inline-flex items-center gap-1">
-                                  <ShieldCheck className="h-3 w-3" />
-                                  Verified
-                                </span>
-                              ) : (
-                                <span className="text-[11px] text-amber-600 inline-flex items-center gap-1">
-                                  <ShieldAlert className="h-3 w-3" />
-                                  Unverified
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="font-mono text-sm">{u.email}</div>
-                        </td>
-                        <td className="px-4 py-3">{u.phone || "—"}</td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={clsx(
-                                "uppercase",
-                                u.role === Role.SUPER_ADMIN &&
-                                  "border-purple-500",
-                                u.role === Role.ADMIN && "border-blue-500",
-                                u.role === Role.DRIVER && "border-emerald-500",
-                                u.role === Role.RIDER && "border-gray-400"
-                              )}
-                            >
-                              {u.role}
-                            </Badge>
-                            <Select
-                              value={u.role}
-                              onValueChange={(val) =>
-                                onChangeRole(u, val as Role)
-                              }
-                              disabled={isUpdating || cannotChangeRole}
-                            >
-                              <SelectTrigger className="w-[160px]">
-                                <UserCog className="h-4 w-4 mr-2 opacity-70" />
-                                <SelectValue placeholder="Change role" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {ROLE_OPTIONS.map((r) => (
-                                  <SelectItem
-                                    key={r}
-                                    value={r}
-                                    disabled={
-                                      r === Role.SUPER_ADMIN &&
-                                      myRole !== Role.SUPER_ADMIN
-                                    }
-                                  >
-                                    {r}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {cannotChangeRole && (
-                            <p className="mt-1 text-[11px] text-muted-foreground">
-                              {roleBlockMsg ?? "Cannot change your own role"}
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              className={clsx(
-                                "uppercase",
-                                u.isActive === IsActive.ACTIVE &&
-                                  "bg-emerald-600",
-                                u.isActive === IsActive.SUSPENDED &&
-                                  "bg-amber-600",
-                                u.isActive === IsActive.BLOCKED && "bg-red-600"
-                              )}
-                            >
-                              {u.isActive}
-                            </Badge>
-                            <Select
-                              value={u.isActive ?? IsActive.ACTIVE}
-                              onValueChange={(val) =>
-                                onChangeStatus(u, val as IsActive)
-                              }
-                              disabled={isUpdating}
-                            >
-                              <SelectTrigger className="w-[160px]">
-                                <SelectValue placeholder="Change status" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {STATUS_OPTIONS.map((s) => (
-                                  <SelectItem key={s} value={s}>
-                                    {s}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">
-                          {u.createdAt
-                            ? new Date(u.createdAt).toLocaleDateString(
-                                "en-US",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                }
-                              )
-                            : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })
+                      {/* Email */}
+                      <td className="px-4 py-3">
+                        <div className="font-mono text-sm">
+                          {u.email || "—"}
+                        </div>
+                      </td>
+
+                      {/* Phone */}
+                      <td className="px-4 py-3">{u.phone || "—"}</td>
+
+                      {/* Role */}
+                      {/* <td className="px-4 py-3 font-medium">{u.role || "—"}</td> */}
+
+                      {/* Status */}
+                      {/* <td className="px-4 py-3 font-medium">
+                        {u.isActive || "—"}
+                      </td> */}
+
+                      {/* Role */}
+                      <td className="px-4 py-3">
+                        {u.role && (
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-medium ${
+                              roleMapper[u.role].color
+                            }`}
+                          >
+                            {roleMapper[u.role].icon}
+                            {roleMapper[u.role].label}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3">
+                        {u.isActive && (
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-medium ${
+                              statusMapper[u.isActive].color
+                            }`}
+                          >
+                            {statusMapper[u.isActive].icon}
+                            {statusMapper[u.isActive].label}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* CreatedAt */}
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {u.createdAt
+                          ? new Date(u.createdAt).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
-          <CardFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
+          {/* <CardFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
             <div className="text-sm text-muted-foreground">
               {totalItems} total • Page {pageFromMeta} of {totalPages}
             </div>
             <div className="flex items-center gap-1">
-              {/* Numbered pagination (shadcn style) */}
               <Button
                 variant="outline"
                 size="sm"
@@ -584,7 +313,7 @@ export default function AllUser() {
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-          </CardFooter>
+          </CardFooter> */}
         </CardContent>
       </Card>
     </div>
