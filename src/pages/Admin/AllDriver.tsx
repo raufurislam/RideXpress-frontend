@@ -71,12 +71,13 @@ interface SortConfig {
 
 const AllDriver: React.FC = () => {
   // API integration
+  const emptyParams = {} as const;
   const {
     data: driversResponse,
     isLoading,
     error,
     refetch,
-  } = useGetAllDriversQuery();
+  } = useGetAllDriversQuery(emptyParams);
   const [updateDriverStatus, { isLoading: isUpdating }] =
     useUpdateDriverStatusMutation();
 
@@ -90,12 +91,19 @@ const AllDriver: React.FC = () => {
 
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
 
-  // Extract drivers from API response
-  const drivers = driversResponse?.data?.data || [];
+  // Extract drivers from API response (normalized to array)
+  const rawDrivers = (driversResponse?.data ?? null) as unknown;
+  const drivers: Driver[] = Array.isArray(rawDrivers)
+    ? (rawDrivers as Driver[])
+    : rawDrivers &&
+      typeof rawDrivers === "object" &&
+      Array.isArray((rawDrivers as { data?: Driver[] }).data)
+    ? ((rawDrivers as { data?: Driver[] }).data as Driver[]) ?? []
+    : [];
 
   // Filter and sort drivers
   const filteredAndSortedDrivers = useMemo(() => {
-    const filtered = drivers.filter((driver) => {
+    const filtered = drivers.filter((driver: Driver) => {
       const matchesSearch =
         filters.search === "" ||
         driver.vehicleModel
@@ -127,7 +135,7 @@ const AllDriver: React.FC = () => {
 
     // Sort drivers
     if (sortConfig) {
-      const sorted = [...filtered].sort((a, b) => {
+      const sorted = [...filtered].sort((a: Driver, b: Driver) => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
 

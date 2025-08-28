@@ -83,7 +83,13 @@
 
 // redux/features/auth/auth.api.ts
 import { baseApi } from "@/redux/baseApi";
-import type { ILogin, IRegister, IResponse, IUser } from "@/types";
+import type {
+  ILogin,
+  IRegister,
+  IResponse,
+  IResponseWithMeta,
+  IUser,
+} from "@/types";
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -122,7 +128,7 @@ export const authApi = baseApi.injectEndpoints({
     }),
 
     getAllUsers: builder.query<
-      IResponse<IUser[]>,
+      { data: IUser[]; meta: { page: number; limit: number; total: number } },
       {
         search?: string;
         searchTerm?: string;
@@ -139,6 +145,9 @@ export const authApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      transformResponse: (response: IResponseWithMeta<IUser[]>) => {
+        return { data: response.data, meta: response.meta };
+      },
       providesTags: ["USER"],
     }),
 
