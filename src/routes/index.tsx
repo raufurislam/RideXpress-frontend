@@ -16,6 +16,8 @@ import Contact from "@/pages/Contact";
 import FAQ from "@/pages/FAQ";
 import { driverSidebarItems } from "./DriverSidebarItems";
 import Homepage from "@/pages/Homepage";
+import AccountStatus from "@/pages/AccountStatus";
+import GoogleCallback from "@/components/modules/Authentication/GoogleCallback";
 
 export const router = createBrowserRouter([
   {
@@ -46,7 +48,10 @@ export const router = createBrowserRouter([
   },
 
   {
-    Component: withAuth(DashboardLayout, role.superAdmin as TRole),
+    Component: withAuth(DashboardLayout, [
+      role.superAdmin as TRole,
+      role.admin as TRole,
+    ]),
     path: "/admin",
     children: [
       { index: true, element: <Navigate to="/admin/analytics" /> },
@@ -84,4 +89,6 @@ export const router = createBrowserRouter([
     Component: Unauthorized,
     path: "/unauthorized",
   },
+  { Component: AccountStatus, path: "/account-status" },
+  { Component: GoogleCallback, path: "/google-callback" },
 ]);

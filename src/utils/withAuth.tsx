@@ -28,7 +28,10 @@ import type { TRole } from "@/types";
 import type { ComponentType } from "react";
 import { Navigate } from "react-router";
 
-export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
+export const withAuth = (
+  Component: ComponentType,
+  requiredRole?: TRole | TRole[]
+) => {
   return function AuthWrapper() {
     const { data, isLoading, isFetching } = useUserInfoQuery(undefined);
 
@@ -41,8 +44,22 @@ export const withAuth = (Component: ComponentType, requiredRole?: TRole) => {
       return <Navigate to="/login" />;
     }
 
-    if (requiredRole && requiredRole !== data?.data?.role) {
-      return <Navigate to="/unauthorized" />;
+    const user = data?.data;
+    if (user.isActive === "SUSPENDED" || user.isActive === "BLOCKED") {
+      return (
+        <Navigate to="/account-status" state={{ status: user.isActive }} />
+      );
+    }
+
+    if (requiredRole) {
+      const userRole = data?.data?.role as TRole | undefined;
+      const allowedRoles = Array.isArray(requiredRole)
+        ? requiredRole
+        : [requiredRole];
+      const isAllowed = userRole ? allowedRoles.includes(userRole) : false;
+      if (!isAllowed) {
+        return <Navigate to="/unauthorized" />;
+      }
     }
 
     return <Component />;

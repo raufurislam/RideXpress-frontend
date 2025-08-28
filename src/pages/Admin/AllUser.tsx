@@ -13,6 +13,7 @@ import {
   useGetAllUsersQuery,
   useUpdateUserMutation,
 } from "@/redux/features/auth/auth.api";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -51,72 +52,39 @@ export default function AllUser() {
     if (filters.search) params.searchTerm = filters.search;
     if (filters.role !== "all") params.role = filters.role;
     if (filters.isActive !== "all") params.isActive = filters.isActive;
-    if (filters.sortBy) params.sortBy = filters.sortBy;
-    if (filters.sortOrder) params.sortOrder = filters.sortOrder;
+    // Remove sorting from API call - use only client-side sorting for immediate response
+    // if (filters.sortBy) params.sortBy = filters.sortBy;
+    // if (filters.sortOrder) params.sortOrder = filters.sortOrder;
     return params;
-  }, [filters]);
+  }, [
+    filters.page,
+    filters.limit,
+    filters.search,
+    filters.role,
+    filters.isActive,
+  ]);
 
   const { data, isLoading, isFetching, refetch, isError } =
     useGetAllUsersQuery(queryParams);
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const { data: meResponse } = useUserInfoQuery();
 
   const users: IUser[] = (data?.data as IUser[]) ?? [];
-  const meta = {
+  const meta = (data?.meta as {
+    page: number;
+    limit: number;
+    total: number;
+  }) ?? {
     page: filters.page,
     limit: filters.limit,
     total: users.length,
   };
 
-  console.log(users); //data below. this data just show on my table this time
-  /**
-(4) [{…}, {…}, {…}, {…}]
-0
-0
-: 
-address
-: 
-"Nandina"
-auths
-: 
-[{…}]
-createdAt
-: 
-"2025-08-26T11:26:39.806Z"
-email
-: 
-"driver1@gmail.com"
-isActive
-: 
-"ACTIVE"
-isDeleted
-: 
-false
-isVerified
-: 
-true
-name
-: 
-"Driver1"
-password
-: 
-"$2b$10$RHWgArhOxchB54RcCMQKE.KQWu9YZl3yQGbx.mC3E6dbkT1D0caIS"
-phone
-: 
-"01700000003"
-role
-: 
-"DRIVER"
-updatedAt
-: 
-"2025-08-26T21:06:12.687Z"
-_id
-: 
-"68ad99ef8d22f61d3e43e6ff"
-*/
+  // console.log(users);
 
-  const totalItems = meta?.total ?? users.length;
-  const pageFromMeta = meta?.page ?? filters.page;
-  const limitFromMeta = meta?.limit ?? filters.limit;
+  const totalItems = meta.total ?? users.length;
+  const pageFromMeta = meta.page ?? filters.page;
+  const limitFromMeta = meta.limit ?? filters.limit;
   const totalPages = Math.max(1, Math.ceil(totalItems / limitFromMeta));
 
   const clearFilters = () => {
@@ -137,12 +105,89 @@ _id
   };
 
   const handleSort = (key: string) => {
-    setFilters((f) => ({
-      ...f,
-      sortBy: key,
-      sortOrder: f.sortBy === key && f.sortOrder === "asc" ? "desc" : "asc",
-    }));
+    console.log(
+      "Sorting by:",
+      key,
+      "Current sortBy:",
+      filters.sortBy,
+      "Current sortOrder:",
+      filters.sortOrder
+    );
+    setFilters((f) => {
+      const newSortOrder =
+        f.sortBy === key && f.sortOrder === "asc" ? "desc" : "asc";
+      console.log("New sortOrder will be:", newSortOrder);
+      return {
+        ...f,
+        sortBy: key,
+        sortOrder: newSortOrder,
+      };
+    });
   };
+
+  // Client-side filtering to ensure robust UX regardless of backend filtering
+  const filteredUsers = useMemo(() => {
+    const term = filters.search.trim().toLowerCase();
+    return users.filter((u) => {
+      const matchesSearch =
+        term === "" ||
+        (u.name ?? "").toLowerCase().includes(term) ||
+        (u.email ?? "").toLowerCase().includes(term) ||
+        (u.phone ?? "").toLowerCase().includes(term);
+      const matchesRole = filters.role === "all" || u.role === filters.role;
+      const matchesStatus =
+        filters.isActive === "all" || u.isActive === filters.isActive;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, filters.search, filters.role, filters.isActive]);
+
+  // Client-side sorting (mirrors AllDriver behavior; server-side also supported via params)
+  const sortedUsers = useMemo(() => {
+    console.log('sortedUsers recalculating:', {
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+      filteredUsersLength: filteredUsers.length,
+      hasSortBy: !!filters.sortBy
+    });
+    
+    if (!filters.sortBy) return filteredUsers;
+    
+    const sortKey = filters.sortBy as keyof IUser;
+    const direction = filters.sortOrder === "asc" ? 1 : -1;
+    
+    // Create a copy to avoid mutating the original array
+    const copy = [...filteredUsers];
+    
+    copy.sort((a, b) => {
+      const aVal = a[sortKey];
+      const bVal = b[sortKey];
+      
+      // Handle null/undefined values
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1 * direction;
+      if (bVal == null) return -1 * direction;
+      
+      // Handle date sorting
+      if (sortKey === "createdAt") {
+        const aNum = new Date(aVal as string).getTime();
+        const bNum = new Date(bVal as string).getTime();
+        if (aNum < bNum) return -1 * direction;
+        if (aNum > bNum) return 1 * direction;
+        return 0;
+      }
+      
+      // Handle string sorting
+      const aStr = String(aVal).toLowerCase();
+      const bStr = String(bVal).toLowerCase();
+      
+      if (aStr < bStr) return -1 * direction;
+      if (aStr > bStr) return 1 * direction;
+      return 0;
+    });
+    
+    console.log('Sorting completed. Result length:', copy.length);
+    return copy;
+  }, [filteredUsers, filters.sortBy, filters.sortOrder]);
 
   const handleUpdate = async (userId: string, payload: Partial<IUser>) => {
     try {
@@ -152,6 +197,18 @@ _id
       // toast already handled globally if any
     }
   };
+
+  // Only show full loading screen on initial load when no data exists
+  if (isLoading && !data) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading users...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -278,10 +335,16 @@ _id
       </Card>
 
       {/* Summary */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-6 mb-3">
         <p className="text-sm text-muted-foreground">
           Showing page {pageFromMeta} of {totalPages} • {totalItems} user(s)
         </p>
+        {isFetching && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Updating...
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -296,7 +359,14 @@ _id
                     onClick={() => handleSort("name")}
                   >
                     <div className="inline-flex items-center gap-1.5">
-                      Name <ArrowUpDown className="h-3.5 w-3.5" />
+                      Name
+                      {filters.sortBy === "name" ? (
+                        <span className="text-xs">
+                          {filters.sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      ) : (
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                      )}
                     </div>
                   </th>
                   <th
@@ -304,7 +374,14 @@ _id
                     onClick={() => handleSort("email")}
                   >
                     <div className="inline-flex items-center gap-1.5">
-                      Email <ArrowUpDown className="h-3.5 w-3.5" />
+                      Email
+                      {filters.sortBy === "email" ? (
+                        <span className="text-xs">
+                          {filters.sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      ) : (
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                      )}
                     </div>
                   </th>
                   <th className="px-4 py-3">Phone</th>
@@ -315,31 +392,29 @@ _id
                     onClick={() => handleSort("createdAt")}
                   >
                     <div className="inline-flex items-center gap-1.5">
-                      Created <ArrowUpDown className="h-3.5 w-3.5" />
+                      Created
+                      {filters.sortBy === "createdAt" ? (
+                        <span className="text-xs">
+                          {filters.sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      ) : (
+                        <ArrowUpDown className="h-3.5 w-3.5" />
+                      )}
                     </div>
                   </th>
                   <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {isLoading ? (
+                {isError ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center">
-                      <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                      <p className="text-sm text-muted-foreground mt-2">
-                        Loading users…
-                      </p>
-                    </td>
-                  </tr>
-                ) : isError ? (
-                  <tr>
-                    <td colSpan={6} className="py-10 text-center text-red-600">
+                    <td colSpan={7} className="py-10 text-center text-red-600">
                       Failed to load users.
                     </td>
                   </tr>
-                ) : users.length === 0 ? (
+                ) : sortedUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center">
+                    <td colSpan={7} className="py-10 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Search className="h-8 w-8" />
                         <p>No users found. Try adjusting filters.</p>
@@ -350,7 +425,7 @@ _id
                     </td>
                   </tr>
                 ) : (
-                  users.map((u: IUser) => (
+                  sortedUsers.map((u: IUser) => (
                     <tr
                       key={(u._id as unknown as string) || u.email}
                       className="border-b hover:bg-muted/40 transition-colors"
@@ -418,42 +493,77 @@ _id
 
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 px-2">
-                              Manage
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {/* Role updates */}
-                            {(Object.values(Role) as Role[]).map((r) => (
-                              <DropdownMenuItem
-                                key={`role-${r}`}
-                                disabled={isUpdating || u.role === r}
-                                onClick={() => handleUpdate(u._id, { role: r })}
-                              >
-                                Set role: {roleMapper[r].label}
-                              </DropdownMenuItem>
-                            ))}
-                            {/* Status updates */}
-                            <DropdownMenuItem disabled className="opacity-60">
-                              —
-                            </DropdownMenuItem>
-                            {(Object.values(IsActive) as IsActive[]).map(
-                              (s) => (
-                                <DropdownMenuItem
-                                  key={`status-${s}`}
-                                  disabled={isUpdating || u.isActive === s}
-                                  onClick={() =>
-                                    handleUpdate(u._id, { isActive: s })
-                                  }
+                        {(() => {
+                          const me = meResponse?.data;
+                          const isSelf = me?._id === u._id;
+                          const amAdmin = me?.role === Role.ADMIN;
+                          const isTargetSuperAdmin =
+                            u.role === Role.SUPER_ADMIN;
+                          const canModify =
+                            !isSelf && !(amAdmin && isTargetSuperAdmin);
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 px-2"
+                                  disabled={!canModify}
                                 >
-                                  Set status: {statusMapper[s].label}
+                                  Manage
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {/* Role updates */}
+                                {(() => {
+                                  const roleOptions = (
+                                    Object.values(Role) as Role[]
+                                  ).filter(
+                                    (r) => !(amAdmin && r === Role.SUPER_ADMIN)
+                                  );
+                                  return roleOptions.map((r) => (
+                                    <DropdownMenuItem
+                                      key={`role-${r}`}
+                                      disabled={
+                                        isUpdating || u.role === r || !canModify
+                                      }
+                                      onClick={() =>
+                                        canModify &&
+                                        handleUpdate(u._id, { role: r })
+                                      }
+                                    >
+                                      Set role: {roleMapper[r].label}
+                                    </DropdownMenuItem>
+                                  ));
+                                })()}
+                                {/* Status updates */}
+                                <DropdownMenuItem
+                                  disabled
+                                  className="opacity-60"
+                                >
+                                  —
                                 </DropdownMenuItem>
-                              )
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                {(Object.values(IsActive) as IsActive[]).map(
+                                  (s) => (
+                                    <DropdownMenuItem
+                                      key={`status-${s}`}
+                                      disabled={
+                                        isUpdating ||
+                                        u.isActive === s ||
+                                        !canModify
+                                      }
+                                      onClick={() =>
+                                        canModify &&
+                                        handleUpdate(u._id, { isActive: s })
+                                      }
+                                    >
+                                      Set status: {statusMapper[s].label}
+                                    </DropdownMenuItem>
+                                  )
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))

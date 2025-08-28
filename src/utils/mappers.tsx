@@ -43,7 +43,7 @@ export const statusMapper: Record<
     color: "bg-amber-100 text-amber-700",
     icon: <UserCog className="h-4 w-4" />,
   },
-  [IsActive.BLOCK]: {
+  [IsActive.BLOCKED]: {
     label: "Blocked",
     color: "bg-red-100 text-red-700",
     icon: <Ban className="h-4 w-4" />,
