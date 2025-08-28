@@ -1,3 +1,5 @@
+export * from "./user.type";
+
 // types/types.ts
 import type { ComponentType } from "react";
 
@@ -16,6 +18,17 @@ export interface IResponse<T> {
   success: boolean;
   message: string;
   data: T;
+  meta?: [];
+}
+
+export interface IMeta {
+  page: number;
+  limit: number;
+  total: number;
+}
+
+export interface IResponseWithMeta<T> extends IResponse<T> {
+  meta: IMeta;
 }
 
 export interface ISidebarItem {

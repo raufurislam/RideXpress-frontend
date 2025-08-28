@@ -1,4 +1,87 @@
-// auth.api.ts
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+// // auth.api.ts
+// import { baseApi } from "@/redux/baseApi";
+// import type { ILogin, IRegister, IResponse, IUser } from "@/types";
+
+// export const authApi = baseApi.injectEndpoints({
+//   endpoints: (builder) => ({
+//     register: builder.mutation<IResponse<IUser>, IRegister>({
+//       query: (userInfo) => ({
+//         url: "/user/register",
+//         method: "POST",
+//         data: userInfo,
+//       }),
+//       invalidatesTags: ["USER"],
+//     }),
+
+//     login: builder.mutation<IResponse<IUser>, ILogin>({
+//       query: (userInfo) => ({
+//         url: "/auth/login",
+//         method: "POST",
+//         data: userInfo,
+//       }),
+//       invalidatesTags: ["USER"],
+//     }),
+
+//     logout: builder.mutation({
+//       query: () => ({
+//         url: "/auth/logout",
+//         method: "POST",
+//       }),
+//       invalidatesTags: ["USER"],
+//     }),
+
+//     userInfo: builder.query<IResponse<IUser>, void>({
+//       query: () => ({
+//         url: "/user/me",
+//         method: "GET",
+//       }),
+//       providesTags: ["USER"],
+//     }),
+
+//     updateUser: builder.mutation<
+//       IResponse<IUser>,
+//       { userId: string; payload: Partial<IUser> }
+//     >({
+//       query: ({ userId, payload }) => ({
+//         url: `/user/${userId}`,
+//         method: "PATCH",
+//         data: payload,
+//       }),
+//       invalidatesTags: ["USER"],
+//     }),
+
+//     getAllUsers: builder.query<
+//       IResponse<{ data: IUser[]; meta: any }>,
+//       {
+//         search?: string;
+//         role?: string;
+//         isActive?: string;
+//         page?: number;
+//         limit?: number;
+//       }
+//     >({
+//       query: (params) => ({
+//         url: "/user/all-users",
+//         method: "GET",
+//         params, // passes search, role, isActive, pagination
+//       }),
+//       providesTags: ["USER"],
+//     }),
+//   }),
+// });
+
+// export const {
+//   useRegisterMutation,
+//   useLoginMutation,
+//   useLogoutMutation,
+//   useUserInfoQuery,
+//   useLazyUserInfoQuery,
+//   useUpdateUserMutation,
+//   useGetAllUsersQuery,
+// } = authApi;
+
+// redux/features/auth/auth.api.ts
 import { baseApi } from "@/redux/baseApi";
 import type { ILogin, IRegister, IResponse, IUser } from "@/types";
 
@@ -38,6 +121,50 @@ export const authApi = baseApi.injectEndpoints({
       providesTags: ["USER"],
     }),
 
+    getAllUsers: builder.query<
+      IResponse<IUser[]>,
+      {
+        search?: string;
+        searchTerm?: string;
+        role?: string;
+        isActive?: string;
+        sortBy?: string;
+        sortOrder?: "asc" | "desc";
+        page?: number;
+        limit?: number;
+      }
+    >({
+      query: (params) => ({
+        url: "/user/all-users",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["USER"],
+    }),
+
+    // getAllUsers: builder.query<
+    //   { data: IUser[]; meta: { page: number; limit: number; total: number } },
+    //   {
+    //     search?: string;
+    //     role?: string;
+    //     isActive?: string;
+    //     sortBy?: string;
+    //     sortOrder?: "asc" | "desc";
+    //     page?: number;
+    //     limit?: number;
+    //   }
+    // >({
+    //   query: (params) => ({
+    //     url: "/user/all-users",
+    //     method: "GET",
+    //     params, // axiosBaseQuery will send these as querystring
+    //   }),
+    //   transformResponse: (response: IResponseWithMeta<IUser[]>) => {
+    //     return { data: response.data, meta: response.meta };
+    //   },
+    //   providesTags: ["USER"],
+    // }),
+
     updateUser: builder.mutation<
       IResponse<IUser>,
       { userId: string; payload: Partial<IUser> }
@@ -58,5 +185,6 @@ export const {
   useLogoutMutation,
   useUserInfoQuery,
   useLazyUserInfoQuery,
+  useGetAllUsersQuery,
   useUpdateUserMutation,
 } = authApi;
