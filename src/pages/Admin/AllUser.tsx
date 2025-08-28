@@ -13,6 +13,7 @@ import {
   useGetAllUsersQuery,
   useUpdateUserMutation,
 } from "@/redux/features/auth/auth.api";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import {
   ArrowUpDown,
   ChevronLeft,
@@ -59,6 +60,7 @@ export default function AllUser() {
   const { data, isLoading, isFetching, refetch, isError } =
     useGetAllUsersQuery(queryParams);
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const { data: meResponse } = useUserInfoQuery();
 
   const users: IUser[] = (data?.data as IUser[]) ?? [];
   const meta = {
@@ -67,52 +69,7 @@ export default function AllUser() {
     total: users.length,
   };
 
-  console.log(users); //data below. this data just show on my table this time
-  /**
-(4) [{…}, {…}, {…}, {…}]
-0
-0
-: 
-address
-: 
-"Nandina"
-auths
-: 
-[{…}]
-createdAt
-: 
-"2025-08-26T11:26:39.806Z"
-email
-: 
-"driver1@gmail.com"
-isActive
-: 
-"ACTIVE"
-isDeleted
-: 
-false
-isVerified
-: 
-true
-name
-: 
-"Driver1"
-password
-: 
-"$2b$10$RHWgArhOxchB54RcCMQKE.KQWu9YZl3yQGbx.mC3E6dbkT1D0caIS"
-phone
-: 
-"01700000003"
-role
-: 
-"DRIVER"
-updatedAt
-: 
-"2025-08-26T21:06:12.687Z"
-_id
-: 
-"68ad99ef8d22f61d3e43e6ff"
-*/
+  // console.log(users);
 
   const totalItems = meta?.total ?? users.length;
   const pageFromMeta = meta?.page ?? filters.page;
@@ -418,42 +375,77 @@ _id
 
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 px-2">
-                              Manage
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {/* Role updates */}
-                            {(Object.values(Role) as Role[]).map((r) => (
-                              <DropdownMenuItem
-                                key={`role-${r}`}
-                                disabled={isUpdating || u.role === r}
-                                onClick={() => handleUpdate(u._id, { role: r })}
-                              >
-                                Set role: {roleMapper[r].label}
-                              </DropdownMenuItem>
-                            ))}
-                            {/* Status updates */}
-                            <DropdownMenuItem disabled className="opacity-60">
-                              —
-                            </DropdownMenuItem>
-                            {(Object.values(IsActive) as IsActive[]).map(
-                              (s) => (
-                                <DropdownMenuItem
-                                  key={`status-${s}`}
-                                  disabled={isUpdating || u.isActive === s}
-                                  onClick={() =>
-                                    handleUpdate(u._id, { isActive: s })
-                                  }
+                        {(() => {
+                          const me = meResponse?.data;
+                          const isSelf = me?._id === u._id;
+                          const amAdmin = me?.role === Role.ADMIN;
+                          const isTargetSuperAdmin =
+                            u.role === Role.SUPER_ADMIN;
+                          const canModify =
+                            !isSelf && !(amAdmin && isTargetSuperAdmin);
+                          return (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 px-2"
+                                  disabled={!canModify}
                                 >
-                                  Set status: {statusMapper[s].label}
+                                  Manage
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {/* Role updates */}
+                                {(() => {
+                                  const roleOptions = (
+                                    Object.values(Role) as Role[]
+                                  ).filter(
+                                    (r) => !(amAdmin && r === Role.SUPER_ADMIN)
+                                  );
+                                  return roleOptions.map((r) => (
+                                    <DropdownMenuItem
+                                      key={`role-${r}`}
+                                      disabled={
+                                        isUpdating || u.role === r || !canModify
+                                      }
+                                      onClick={() =>
+                                        canModify &&
+                                        handleUpdate(u._id, { role: r })
+                                      }
+                                    >
+                                      Set role: {roleMapper[r].label}
+                                    </DropdownMenuItem>
+                                  ));
+                                })()}
+                                {/* Status updates */}
+                                <DropdownMenuItem
+                                  disabled
+                                  className="opacity-60"
+                                >
+                                  —
                                 </DropdownMenuItem>
-                              )
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                                {(Object.values(IsActive) as IsActive[]).map(
+                                  (s) => (
+                                    <DropdownMenuItem
+                                      key={`status-${s}`}
+                                      disabled={
+                                        isUpdating ||
+                                        u.isActive === s ||
+                                        !canModify
+                                      }
+                                      onClick={() =>
+                                        canModify &&
+                                        handleUpdate(u._id, { isActive: s })
+                                      }
+                                    >
+                                      Set status: {statusMapper[s].label}
+                                    </DropdownMenuItem>
+                                  )
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          );
+                        })()}
                       </td>
                     </tr>
                   ))
