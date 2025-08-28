@@ -44,6 +44,13 @@ export const withAuth = (
       return <Navigate to="/login" />;
     }
 
+    const user = data?.data;
+    if (user.isActive === "SUSPENDED" || user.isActive === "BLOCKED") {
+      return (
+        <Navigate to="/account-status" state={{ status: user.isActive }} />
+      );
+    }
+
     if (requiredRole) {
       const userRole = data?.data?.role as TRole | undefined;
       const allowedRoles = Array.isArray(requiredRole)
