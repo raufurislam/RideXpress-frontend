@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +11,6 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   RefreshCw,
   Search,
@@ -20,12 +19,92 @@ import {
   Bike,
   DollarSign,
   Eye,
-  Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useGetAllRideRiderQuery } from "@/redux/features/ride/ride.api";
 import { type IRide } from "@/types";
+import { formatDate } from "@/lib/utils";
+
+// Mock data for now - replace with actual API call
+const mockRides: IRide[] = [
+  {
+    _id: "1",
+    riderId: "rider1",
+    driverId: "driver1",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Central Park, New York",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Times Square, New York",
+    },
+    fare: 25.5,
+    distance: 2.5,
+    status: "COMPLETED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T10:00:00Z"),
+      acceptedAt: new Date("2024-01-15T10:05:00Z"),
+      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
+      completedAt: new Date("2024-01-15T10:35:00Z"),
+    },
+    createdAt: "2024-01-15T10:00:00Z",
+    updatedAt: "2024-01-15T10:35:00Z",
+  },
+  {
+    _id: "2",
+    riderId: "rider2",
+    driverId: "driver2",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Brooklyn Bridge, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Empire State Building, NY",
+    },
+    fare: 18.75,
+    distance: 1.8,
+    status: "IN_TRANSIT",
+    vehicleType: "BIKE",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T11:00:00Z"),
+      acceptedAt: new Date("2024-01-15T11:03:00Z"),
+      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
+    },
+    createdAt: "2024-01-15T11:00:00Z",
+    updatedAt: "2024-01-15T11:10:00Z",
+  },
+  {
+    _id: "3",
+    riderId: "rider3",
+    driverId: "driver3",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Statue of Liberty, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Wall Street, NY",
+    },
+    fare: 32.0,
+    distance: 3.2,
+    status: "REQUESTED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T12:00:00Z"),
+    },
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z",
+  },
+];
 
 const statusConfig = {
   REQUESTED: {
@@ -71,13 +150,12 @@ const vehicleTypeConfig = {
   },
 };
 
-export default function RideHistory() {
+export default function AllRides() {
   const [filters, setFilters] = useState<{
     search: string;
     status: string | "all";
     vehicleType: string | "all";
     fareRange: string | "all";
-    dateRange: string | "all";
     page: number;
     limit: number;
     sortBy?: string;
@@ -87,7 +165,6 @@ export default function RideHistory() {
     status: "all",
     vehicleType: "all",
     fareRange: "all",
-    dateRange: "all",
     page: 1,
     limit: 10,
   });
@@ -95,12 +172,11 @@ export default function RideHistory() {
   const [selectedRide, setSelectedRide] = useState<IRide | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const {
-    data: rides = [],
-    isLoading,
-    error,
-    refetch,
-  } = useGetAllRideRiderQuery();
+  // Mock data - replace with actual API call
+  const rides = mockRides;
+  const isLoading = false;
+  const isFetching = false;
+  const isError = false;
 
   const clearFilters = () => {
     setFilters({
@@ -108,7 +184,6 @@ export default function RideHistory() {
       status: "all",
       vehicleType: "all",
       fareRange: "all",
-      dateRange: "all",
       page: 1,
       limit: filters.limit,
     });
@@ -130,6 +205,7 @@ export default function RideHistory() {
         term === "" ||
         ride.pickupLocation.name.toLowerCase().includes(term) ||
         ride.destinationLocation.name.toLowerCase().includes(term) ||
+        ride.riderId.toLowerCase().includes(term) ||
         ride.driverId.toLowerCase().includes(term);
 
       const matchesStatus =
@@ -154,35 +230,8 @@ export default function RideHistory() {
         }
       }
 
-      let matchesDateRange = true;
-      if (filters.dateRange !== "all") {
-        const rideDate = new Date(ride.createdAt);
-        const now = new Date();
-        const diffTime = Math.abs(now.getTime() - rideDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        switch (filters.dateRange) {
-          case "today":
-            matchesDateRange = diffDays <= 1;
-            break;
-          case "week":
-            matchesDateRange = diffDays <= 7;
-            break;
-          case "month":
-            matchesDateRange = diffDays <= 30;
-            break;
-          case "year":
-            matchesDateRange = diffDays <= 365;
-            break;
-        }
-      }
-
       return (
-        matchesSearch &&
-        matchesStatus &&
-        matchesVehicleType &&
-        matchesFareRange &&
-        matchesDateRange
+        matchesSearch && matchesStatus && matchesVehicleType && matchesFareRange
       );
     });
   }, [
@@ -191,7 +240,6 @@ export default function RideHistory() {
     filters.status,
     filters.vehicleType,
     filters.fareRange,
-    filters.dateRange,
   ]);
 
   // Client-side sorting
@@ -238,33 +286,9 @@ export default function RideHistory() {
     return copy;
   }, [filteredRides, filters.sortBy, filters.sortOrder]);
 
-  // Pagination
-  const totalPages = Math.ceil(sortedRides.length / filters.limit);
-  const startIndex = (filters.page - 1) * filters.limit;
-  const endIndex = startIndex + filters.limit;
-  const paginatedRides = sortedRides.slice(startIndex, endIndex);
-
-  const handlePageChange = (nextPage: number) => {
-    setFilters((f) => ({
-      ...f,
-      page: Math.min(Math.max(1, nextPage), totalPages),
-    }));
-  };
-
   const handleViewDetails = (ride: IRide) => {
     setSelectedRide(ride);
     setShowDetailsModal(true);
-  };
-
-  const formatDate = (dateString: string | Date) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   if (isLoading) {
@@ -272,18 +296,7 @@ export default function RideHistory() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground">Loading ride history...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Error loading ride history</p>
-          <Button onClick={() => refetch()}>Try Again</Button>
+          <p className="text-muted-foreground">Loading rides...</p>
         </div>
       </div>
     );
@@ -294,20 +307,23 @@ export default function RideHistory() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ride History</h1>
+          <h1 className="text-3xl font-bold tracking-tight">All Rides</h1>
           <p className="text-muted-foreground">
-            View and manage your complete ride history
+            Monitor and manage all ride activities across the platform
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => refetch()}
-            disabled={isLoading}
+            onClick={() => {}} // Add refetch function
+            disabled={isLoading || isFetching}
             className="flex items-center gap-2"
           >
             <RefreshCw
-              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              className={clsx(
+                "h-4 w-4",
+                (isLoading || isFetching) && "animate-spin"
+              )}
             />
             Refresh
           </Button>
@@ -325,13 +341,13 @@ export default function RideHistory() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search locations, drivers..."
+                  placeholder="Search locations, riders, drivers..."
                   value={filters.search}
                   onChange={(e) =>
                     setFilters((f) => ({
@@ -406,26 +422,6 @@ export default function RideHistory() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Date Range</label>
-              <Select
-                value={filters.dateRange}
-                onValueChange={(value) =>
-                  setFilters((f) => ({ ...f, dateRange: value, page: 1 }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Time" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Time</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="week">This Week</SelectItem>
-                  <SelectItem value="month">This Month</SelectItem>
-                  <SelectItem value="year">This Year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
               <label className="text-sm font-medium">Per Page</label>
               <Select
                 value={String(filters.limit)}
@@ -452,13 +448,14 @@ export default function RideHistory() {
       {/* Summary */}
       <div className="flex items-center justify-between mt-6 mb-3">
         <p className="text-sm text-muted-foreground">
-          Showing {startIndex + 1}-{Math.min(endIndex, sortedRides.length)} of{" "}
-          {sortedRides.length} rides
+          Showing {sortedRides.length} of {rides.length} rides
         </p>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          Total rides: {rides.length}
-        </div>
+        {isFetching && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Updating...
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -478,7 +475,7 @@ export default function RideHistory() {
                     onClick={() => handleSort("createdAt")}
                   >
                     <div className="inline-flex items-center gap-1.5">
-                      Date
+                      Created
                       {filters.sortBy === "createdAt" ? (
                         <span className="text-xs">
                           {filters.sortOrder === "asc" ? "↑" : "↓"}
@@ -492,7 +489,13 @@ export default function RideHistory() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedRides.length === 0 ? (
+                {isError ? (
+                  <tr>
+                    <td colSpan={7} className="py-10 text-center text-red-600">
+                      Failed to load rides.
+                    </td>
+                  </tr>
+                ) : sortedRides.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-10 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -505,7 +508,7 @@ export default function RideHistory() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedRides.map((ride) => (
+                  sortedRides.map((ride) => (
                     <tr
                       key={ride._id}
                       className="border-b hover:bg-muted/40 transition-colors"
@@ -515,6 +518,9 @@ export default function RideHistory() {
                         <div className="flex flex-col gap-1">
                           <div className="font-medium text-sm">
                             #{ride._id.slice(-6)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Rider: {ride.riderId.slice(-6)}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             Driver: {ride.driverId.slice(-6)}
@@ -602,7 +608,7 @@ export default function RideHistory() {
                         </Badge>
                       </td>
 
-                      {/* Date */}
+                      {/* Created */}
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {formatDate(ride.createdAt)}
                       </td>
@@ -627,33 +633,6 @@ export default function RideHistory() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
-            Page {filters.page} of {totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(filters.page - 1)}
-              disabled={filters.page <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" /> Prev
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handlePageChange(filters.page + 1)}
-              disabled={filters.page >= totalPages}
-            >
-              Next <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
 
       {/* Ride Details Modal */}
       {showDetailsModal && selectedRide && (
@@ -836,14 +815,24 @@ export default function RideHistory() {
                   </div>
                 </div>
 
-                {/* Driver Info */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Driver ID
-                  </label>
-                  <p className="font-mono text-sm bg-muted/50 p-2 rounded">
-                    {selectedRide.driverId}
-                  </p>
+                {/* User IDs */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Rider ID
+                    </label>
+                    <p className="font-mono text-sm bg-muted/50 p-2 rounded">
+                      {selectedRide.riderId}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Driver ID
+                    </label>
+                    <p className="font-mono text-sm bg-muted/50 p-2 rounded">
+                      {selectedRide.driverId}
+                    </p>
+                  </div>
                 </div>
               </div>
 
