@@ -52,38 +52,6 @@ export function LoginForm({
   //   }
   // };
 
-  // const onSubmit = async (data: ILogin) => {
-  //   try {
-  //     const res = await login(data).unwrap();
-  //     console.log(res);
-
-  //     if (res.success) {
-  //       toast.success("Logged in successfully");
-  //       navigate("/"); // normal dashboard
-  //     }
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   } catch (err: any) {
-  //     console.error(err);
-
-  //     // Check the backend message for suspended/blocked users
-  //     const msg = err?.data?.message || "";
-
-  //     if (msg.includes("SUSPENDED") || msg.includes("BLOCKED")) {
-  //       toast.error(`Your account is ${msg.replace("User is ", "")}`);
-  //       return navigate("/account-status", {
-  //         state: { status: msg.replace("User is ", "") },
-  //       });
-  //     }
-
-  //     if (msg === "Password does not match") {
-  //       toast.error("Invalid credential");
-  //     } else if (msg === "User is not verified") {
-  //       toast.error("Your account is not verified");
-  //       navigate("/verify", { state: data.email });
-  //     }
-  //   }
-  // };
-
   const onSubmit = async (data: ILogin) => {
     try {
       const res = await login(data).unwrap();
@@ -91,27 +59,20 @@ export function LoginForm({
 
       if (res.success) {
         toast.success("Logged in successfully");
-
-        // Check user status from response
-        const status = res.data?.isActive || "ACTIVE";
-        if (status === "SUSPENDED" || status === "BLOCKED") {
-          toast.error(`Your account is ${status}`);
-          return navigate("/account-status", { state: { status } });
-        }
-
         navigate("/"); // normal dashboard
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
 
+      // Check the backend message for suspended/blocked users
       const msg = err?.data?.message || "";
 
-      // Handle suspended/blocked
       if (msg.includes("SUSPENDED") || msg.includes("BLOCKED")) {
-        const status = msg.replace("User is ", "") || "UNKNOWN";
-        toast.error(`Your account is ${status}`);
-        return navigate("/account-status", { state: { status } });
+        toast.error(`Your account is ${msg.replace("User is ", "")}`);
+        return navigate("/account-status", {
+          state: { status: msg.replace("User is ", "") },
+        });
       }
 
       if (msg === "Password does not match") {
@@ -122,6 +83,45 @@ export function LoginForm({
       }
     }
   };
+
+  // const onSubmit = async (data: ILogin) => {
+  //   try {
+  //     const res = await login(data).unwrap();
+  //     console.log(res);
+
+  //     if (res.success) {
+  //       toast.success("Logged in successfully");
+
+  //       // Check user status from response
+  //       const status = res.data?.isActive || "ACTIVE";
+  //       if (status === "SUSPENDED" || status === "BLOCKED") {
+  //         toast.error(`Your account is ${status}`);
+  //         return navigate("/account-status", { state: { status } });
+  //       }
+
+  //       navigate("/"); // normal dashboard
+  //     }
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   } catch (err: any) {
+  //     console.error(err);
+
+  //     const msg = err?.data?.message || "";
+
+  //     // Handle suspended/blocked
+  //     if (msg.includes("SUSPENDED") || msg.includes("BLOCKED")) {
+  //       const status = msg.replace("User is ", "") || "UNKNOWN";
+  //       toast.error(`Your account is ${status}`);
+  //       return navigate("/account-status", { state: { status } });
+  //     }
+
+  //     if (msg === "Password does not match") {
+  //       toast.error("Invalid credential");
+  //     } else if (msg === "User is not verified") {
+  //       toast.error("Your account is not verified");
+  //       navigate("/verify", { state: data.email });
+  //     }
+  //   }
+  // };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

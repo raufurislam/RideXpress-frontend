@@ -17,9 +17,7 @@ export type Role = (typeof Role)[keyof typeof Role];
 // ✅ IsActive already correct, just kept same style
 export const IsActive = {
   ACTIVE: "ACTIVE",
-  // INACTIVE: "INACTIVE",
   SUSPENDED: "SUSPENDED",
-  // Backend uses BLOCK (not BLOCKED)
   BLOCKED: "BLOCKED",
 } as const;
 
