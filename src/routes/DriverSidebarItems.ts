@@ -1,4 +1,4 @@
-import ActiveRides from "@/pages/Ride/ActiveRides";
+import ActiveRides from "@/pages/Rider/ActiveRides";
 import type { ISidebarItem } from "@/types";
 
 export const driverSidebarItems: ISidebarItem[] = [

@@ -18,6 +18,7 @@ import { driverSidebarItems } from "./DriverSidebarItems";
 import Homepage from "@/pages/Homepage";
 import AccountStatus from "@/pages/AccountStatus";
 import GoogleCallback from "@/components/modules/Authentication/GoogleCallback";
+import RideDetails from "@/pages/Rider/RideDetails";
 
 export const router = createBrowserRouter([
   {
@@ -63,9 +64,14 @@ export const router = createBrowserRouter([
     Component: withAuth(DashboardLayout, role.rider as TRole),
     path: "/rider",
     children: [
-      { index: true, element: <Navigate to="/rider/bookings" /> },
+      { index: true, element: <Navigate to="/rider/request-ride" /> },
       ...generateRoutes(riderSidebarItems),
     ],
+  },
+
+  {
+    Component: withAuth(RideDetails),
+    path: "/rider/ride-details/:rideId",
   },
 
   {

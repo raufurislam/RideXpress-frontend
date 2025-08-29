@@ -49,7 +49,7 @@ const registerSchema = z
   });
 
 const roleRedirectMap: Record<"RIDER" | "DRIVER", string> = {
-  RIDER: "/rider/bookings",
+  RIDER: "/rider/request-ride",
   DRIVER: "/rider/driver-request",
 };
 
