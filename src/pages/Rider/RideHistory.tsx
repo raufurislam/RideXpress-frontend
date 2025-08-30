@@ -18,10 +18,10 @@ import {
   MapPin,
   Car,
   Bike,
-  DollarSign,
   Eye,
   Calendar,
 } from "lucide-react";
+import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useGetAllRideRiderQuery } from "@/redux/features/ride/ride.api";
@@ -143,13 +143,13 @@ export default function RideHistory() {
         const fare = ride.fare;
         switch (filters.fareRange) {
           case "low":
-            matchesFareRange = fare < 20;
+            matchesFareRange = fare < 199;
             break;
           case "medium":
-            matchesFareRange = fare >= 20 && fare < 50;
+            matchesFareRange = fare >= 200 && fare < 499;
             break;
           case "high":
-            matchesFareRange = fare >= 50;
+            matchesFareRange = fare >= 500;
             break;
         }
       }
@@ -399,9 +399,9 @@ export default function RideHistory() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Fares</SelectItem>
-                  <SelectItem value="low">Low (&lt;$20)</SelectItem>
-                  <SelectItem value="medium">Medium ($20-$50)</SelectItem>
-                  <SelectItem value="high">High (&gt;$50)</SelectItem>
+                  <SelectItem value="low">Low (&lt;৳199)</SelectItem>
+                  <SelectItem value="medium">Medium (৳200-৳499)</SelectItem>
+                  <SelectItem value="high">High (&gt;৳500)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -550,9 +550,9 @@ export default function RideHistory() {
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3 text-green-600" />
+                            <FaBangladeshiTakaSign className="h-3 w-3 text-green-600" />
                             <span className="font-medium">
-                              ${ride.fare.toFixed(2)}
+                              {ride.fare.toFixed(2)}
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground">
@@ -749,9 +749,12 @@ export default function RideHistory() {
                 {/* Ride Details */}
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-3 bg-muted/50 rounded-lg">
-                    <DollarSign className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold">
-                      ${selectedRide.fare.toFixed(2)}
+                    <FaBangladeshiTakaSign className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                    <div className="flex items-center justify-center gap-1">
+                      <FaBangladeshiTakaSign />
+                      <div className="text-2xl font-bold">
+                        {selectedRide.fare.toFixed(2)}
+                      </div>
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Total Fare

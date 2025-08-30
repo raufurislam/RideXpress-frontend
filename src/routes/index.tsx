@@ -18,7 +18,7 @@ import { driverSidebarItems } from "./DriverSidebarItems";
 import Homepage from "@/pages/Homepage";
 import AccountStatus from "@/pages/AccountStatus";
 import GoogleCallback from "@/components/modules/Authentication/GoogleCallback";
-import RideDetails from "@/pages/Rider/RideDetails";
+// import RideDetails from "@/pages/Rider/RideDetails";
 
 export const router = createBrowserRouter([
   {
@@ -69,10 +69,10 @@ export const router = createBrowserRouter([
     ],
   },
 
-  {
-    Component: withAuth(RideDetails),
-    path: "/rider/ride-details/:rideId",
-  },
+  // {
+  //   Component: withAuth(RideDetails),
+  //   path: "/rider/ride-details/:rideId",
+  // },
 
   {
     Component: withAuth(DashboardLayout, role.driver as TRole),
