@@ -20,6 +20,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ModeToggle } from "./ModeToggler";
 import { Link } from "react-router";
 import {
@@ -153,107 +159,115 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           {/* User Avatar Dropdown or Login Button */}
           {data?.data?.email ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-10 w-10 rounded-full p-0 hover:bg-accent transition-colors"
+            <TooltipProvider>
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="relative h-10 w-10 rounded-full p-0 hover:bg-accent transition-colors"
+                      >
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage
+                            src={data.data.picture || ""}
+                            alt={data.data.name}
+                            className="object-cover"
+                          />
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                            {getUserInitial(data.data.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{data.data.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent
+                  className="w-80 p-4"
+                  align="end"
+                  sideOffset={8}
                 >
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage
-                      src={data.data.picture}
-                      alt={data.data.name}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
-                      {getUserInitial(data.data.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-80 p-4"
-                align="end"
-                sideOffset={8}
-              >
-                {/* User Info Section */}
-                <div className="flex items-center gap-3 pb-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage
-                      src={data.data.picture}
-                      alt={data.data.name}
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
-                      {getUserInitial(data.data.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {data.data.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {data.data.email}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
-                        {data.data.role}
-                      </span>
-                      {hasGooglePicture && (
-                        <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
-                          Google
+                  {/* User Info Section */}
+                  <div className="flex items-center gap-3 pb-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage
+                        src={data.data.picture || ""}
+                        alt={data.data.name}
+                        className="object-cover"
+                      />
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
+                        {getUserInitial(data.data.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">
+                        {data.data.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {data.data.email}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+                          {data.data.role}
                         </span>
-                      )}
+                        {hasGooglePicture && (
+                          <span className="inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/20 px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+                            Google
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <DropdownMenuSeparator />
-
-                {/* Theme Toggle */}
-                <div className="py-2">
-                  <DropdownMenuLabel className="text-xs font-medium text-muted-foreground mb-2">
-                    Theme
-                  </DropdownMenuLabel>
-                  <div className="flex items-center gap-2">
-                    <ModeToggle />
-                    <span className="text-sm">Theme</span>
-                  </div>
-                </div>
-
-                <DropdownMenuSeparator />
-
-                {/* Actions */}
-                <div className="space-y-1">
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/profile"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      to="/settings"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <Settings className="h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Logout</span>
-                  </DropdownMenuItem>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+
+                  {/* Theme Toggle */}
+                  <div className="py-2">
+                    <DropdownMenuLabel className="text-xs font-medium text-muted-foreground mb-2">
+                      Theme
+                    </DropdownMenuLabel>
+                    <div className="flex items-center gap-2">
+                      <ModeToggle />
+                    </div>
+                  </div>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Actions */}
+                  <div className="space-y-1">
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <User className="h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/settings"
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="flex items-center gap-2 text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TooltipProvider>
           ) : (
             <Button asChild className="text-sm font-medium">
               <Link to="/login">Login</Link>
