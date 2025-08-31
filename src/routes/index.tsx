@@ -4,6 +4,8 @@ import { role } from "@/constants/role";
 import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 import type { TRole } from "@/types";
 import { withAuth } from "@/utils/withAuth";
 import { createBrowserRouter, Navigate } from "react-router";
@@ -90,6 +92,14 @@ export const router = createBrowserRouter([
   {
     Component: Register,
     path: "/register",
+  },
+  {
+    Component: withAuth(Profile),
+    path: "/profile",
+  },
+  {
+    Component: withAuth(Settings),
+    path: "/settings",
   },
   {
     Component: Unauthorized,

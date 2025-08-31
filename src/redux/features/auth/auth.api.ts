@@ -84,10 +84,12 @@
 // redux/features/auth/auth.api.ts
 import { baseApi } from "@/redux/baseApi";
 import type {
+  IChangePassword,
   ILogin,
   IRegister,
   IResponse,
   IResponseWithMeta,
+  ISetPassword,
   IUser,
 } from "@/types";
 
@@ -185,6 +187,25 @@ export const authApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["USER"],
     }),
+
+    resetPassword: builder.mutation<IResponse<unknown>, IChangePassword>({
+      query: (userInfo) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        data: userInfo,
+      }),
+      invalidatesTags: ["USER"],
+    }),
+
+    
+    setPassword: builder.mutation<IResponse<unknown>, ISetPassword>({
+      query: (userInfo) => ({
+        url: "/auth/set-password", // google login user later can set his password with this api
+        method: "POST",
+        data: userInfo,
+      }),
+      invalidatesTags: ["USER"],
+    }),
   }),
 });
 
@@ -196,4 +217,6 @@ export const {
   useLazyUserInfoQuery,
   useGetAllUsersQuery,
   useUpdateUserMutation,
+  useSetPasswordMutation,
+  useResetPasswordMutation,
 } = authApi;
