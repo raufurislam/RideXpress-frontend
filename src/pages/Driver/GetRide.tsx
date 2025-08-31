@@ -1,4 +1,4 @@
-import { CiCircleCheck } from "react-icons/ci";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,20 +9,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetAllRideQuery } from "@/redux/features/driver/driver.api";
+import { Badge } from "@/components/ui/badge";
+import {
+  useGetAllRideQuery,
+  useUpdateAvailabilityMutation,
+} from "@/redux/features/driver/driver.api";
+import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
 import {
   ArrowUpDown,
-  Badge,
   Bike,
   Calendar,
   Car,
-  MapPin,
   RefreshCw,
   Search,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
-import { useState } from "react";
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
-import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
+import { toast } from "sonner";
+import { type IRide } from "@/types";
+import { useNavigate } from "react-router";
 
 const statusConfig = {
   REQUESTED: {
@@ -44,45 +52,128 @@ const vehicleTypeConfig = {
   },
 };
 
-export default function GetRide() {
-  const { data: rides = [], isLoading, error, refetch } = useGetAllRideQuery();
-  const [updateRideStatus] = useUpdateRideStatusMutation();
-  console.log(rides);
+type FareRange = {
+  label: string;
+  min?: number;
+  max?: number;
+};
 
-  const [filters, setFilters] = useState<{
-    search: string;
-    vehicleType: string | "all";
-    fareRange: string | "all";
-    dateRange: string | "all";
-    page: number;
-    limit: number;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-  }>({
+const fareRangeConfig: Record<string, FareRange> = {
+  low: { label: "Low (<৳199)", max: 199 },
+  medium: { label: "Medium (৳200-৳499)", min: 200, max: 499 },
+  high: { label: "High (>৳500)", min: 500 },
+};
+
+export default function GetRide() {
+  const navigate = useNavigate();
+  const {
+    data: allRides = [],
+    isLoading,
+    error,
+    refetch,
+  } = useGetAllRideQuery();
+
+  // Filter rides to show only REQUESTED status
+  const requestedRides = useMemo(() => {
+    return allRides.filter((ride: IRide) => ride.status === "REQUESTED");
+  }, [allRides]);
+  const [updateRideStatus] = useUpdateRideStatusMutation();
+  const [updateAvailability] = useUpdateAvailabilityMutation();
+
+  const [filters, setFilters] = useState({
     search: "",
-    vehicleType: "all",
-    fareRange: "all",
-    dateRange: "all",
+    vehicleType: "all" as string | "all",
+    fareRange: "all" as string | "all",
     page: 1,
     limit: 10,
+    sortBy: "createdAt" as string,
+    sortOrder: "desc" as "asc" | "desc",
   });
 
+  // Apply filters and sorting
+  const filteredAndSortedRides = useMemo(() => {
+    let filtered = requestedRides;
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (ride: IRide) =>
+          ride.pickupLocation.name.toLowerCase().includes(searchLower) ||
+          ride.destinationLocation.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Vehicle type filter
+    if (filters.vehicleType !== "all") {
+      filtered = filtered.filter(
+        (ride: IRide) => ride.vehicleType === filters.vehicleType
+      );
+    }
+
+    // Fare range filter
+    if (filters.fareRange !== "all") {
+      const range =
+        fareRangeConfig[filters.fareRange as keyof typeof fareRangeConfig];
+      if (range) {
+        filtered = filtered.filter((ride: IRide) => {
+          if (range.min !== undefined && range.max !== undefined) {
+            return ride.fare >= range.min && ride.fare <= range.max;
+          } else if (range.max !== undefined) {
+            return ride.fare < range.max;
+          } else if (range.min !== undefined) {
+            return ride.fare > range.min;
+          }
+          return true;
+        });
+      }
+    }
+
+    // Sorting
+    filtered.sort((a, b) => {
+      const aValue = a[filters.sortBy as keyof typeof a];
+      const bValue = b[filters.sortBy as keyof typeof b];
+
+      if (filters.sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [requestedRides, filters]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedRides.length / filters.limit);
+  const startIndex = (filters.page - 1) * filters.limit;
+  const endIndex = startIndex + filters.limit;
+  const paginatedRides = filteredAndSortedRides.slice(startIndex, endIndex);
+
   const clearFilters = () => {
-    setFilters({
+    setFilters((prev) => ({
+      ...prev,
       search: "",
       vehicleType: "all",
       fareRange: "all",
-      dateRange: "all",
       page: 1,
-      limit: filters.limit,
-    });
+    }));
   };
 
   const handleSort = (key: string) => {
-    setFilters((f) => ({
-      ...f,
+    setFilters((prev) => ({
+      ...prev,
       sortBy: key,
-      sortOrder: f.sortBy === key && f.sortOrder === "asc" ? "desc" : "asc",
+      sortOrder:
+        prev.sortBy === key && prev.sortOrder === "asc" ? "desc" : "asc",
+      page: 1,
+    }));
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      page: Math.min(Math.max(1, nextPage), totalPages),
     }));
   };
 
@@ -96,27 +187,78 @@ export default function GetRide() {
       minute: "2-digit",
     });
   };
-  // Pagination
-  const totalPages = Math.ceil(sortedRides.length / filters.limit);
-  const startIndex = (filters.page - 1) * filters.limit;
-  const endIndex = startIndex + filters.limit;
-  const paginatedRides = sortedRides.slice(startIndex, endIndex);
 
-  const handlePageChange = (nextPage: number) => {
-    setFilters((f) => ({
-      ...f,
-      page: Math.min(Math.max(1, nextPage), totalPages),
-    }));
+  const handleAcceptRide = async (ride: IRide) => {
+    try {
+      // Update ride status to ACCEPTED
+      await updateRideStatus({
+        rideId: ride._id,
+        status: "ACCEPTED",
+      }).unwrap();
+
+      // Update driver availability to ON_TRIP
+      await updateAvailability({
+        availability: "ON_TRIP",
+      }).unwrap();
+
+      toast.success(
+        "Ride accepted successfully! Redirecting to Active Rides..."
+      );
+
+      // Navigate to ActiveRides page
+      setTimeout(() => {
+        navigate("/driver/active-ride");
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to accept ride:", error);
+      toast.error("Failed to accept ride. Please try again.");
+    }
   };
 
+  const handleRejectRide = async (ride: IRide) => {
+    try {
+      // Update ride status to REJECTED
+      await updateRideStatus({
+        rideId: ride._id,
+        status: "REJECTED",
+      }).unwrap();
+
+      toast.success("Ride rejected successfully!");
+      refetch(); // Refresh the list
+    } catch (error) {
+      console.error("Failed to reject ride:", error);
+      toast.error("Failed to reject ride. Please try again.");
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Error Loading Rides
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Failed to load ride requests. Please try again.
+          </p>
+          <Button onClick={() => refetch()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Get Ride</h1>
           <p className="text-muted-foreground">
-            All Active requested ride. Accept to start a ride.
+            Available ride requests. Accept to start earning!
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -138,24 +280,25 @@ export default function GetRide() {
       </div>
 
       {/* Filters */}
-      <Card className="mt-6">
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
             Filters & Search
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Search</label>
+              <label className="text-sm font-medium">Search Location</label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search locations, drivers..."
+                  placeholder="Search pickup/destination..."
                   value={filters.search}
                   onChange={(e) =>
-                    setFilters((f) => ({
-                      ...f,
+                    setFilters((prev) => ({
+                      ...prev,
                       search: e.target.value,
                       page: 1,
                     }))
@@ -169,9 +312,13 @@ export default function GetRide() {
               <label className="text-sm font-medium">Vehicle Type</label>
               <Select
                 value={filters.vehicleType}
-                // onValueChange={(value) =>
-                //   setFilters((f) => ({ ...f, vehicleType: value, page: 1 }))
-                // }
+                onValueChange={(value) =>
+                  setFilters((prev) => ({
+                    ...prev,
+                    vehicleType: value,
+                    page: 1,
+                  }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Vehicles" />
@@ -186,22 +333,25 @@ export default function GetRide() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Fare Range</label>
               <Select
                 value={filters.fareRange}
-                // onValueChange={(value) =>
-                //   setFilters((f) => ({ ...f, fareRange: value, page: 1 }))
-                // }
+                onValueChange={(value) =>
+                  setFilters((prev) => ({ ...prev, fareRange: value, page: 1 }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Fares" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Fares</SelectItem>
-                  <SelectItem value="low">Low (&lt;৳199)</SelectItem>
-                  <SelectItem value="medium">Medium (৳200-৳499)</SelectItem>
-                  <SelectItem value="high">High (&gt;৳500)</SelectItem>
+                  {Object.entries(fareRangeConfig).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>
+                      {config.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -211,7 +361,11 @@ export default function GetRide() {
               <Select
                 value={String(filters.limit)}
                 onValueChange={(value) =>
-                  setFilters((f) => ({ ...f, limit: Number(value), page: 1 }))
+                  setFilters((prev) => ({
+                    ...prev,
+                    limit: Number(value),
+                    page: 1,
+                  }))
                 }
               >
                 <SelectTrigger>
@@ -231,15 +385,15 @@ export default function GetRide() {
       </Card>
 
       {/* Summary */}
-      <div className="flex items-center justify-between mt-6 mb-3">
+      <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {/* Showing {startIndex + 1}-{Math.min(endIndex, sortedRides.length)} of{" "}
-          {sortedRides.length} rides */}
-          showing
+          Showing {startIndex + 1}-
+          {Math.min(endIndex, filteredAndSortedRides.length)} of{" "}
+          {filteredAndSortedRides.length} requested rides
         </p>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          Total rides: {rides.length} // show only requested ride status length
+          Total available: {requestedRides.length}
         </div>
       </div>
 
@@ -250,13 +404,13 @@ export default function GetRide() {
             <table className="w-full text-left">
               <thead className="border-b bg-muted/40">
                 <tr>
-                  <th className="px-4 py-3">Ride Info</th>
-                  <th className="px-4 py-3">Locations</th>
-                  <th className="px-4 py-3">Fare & Distance</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Vehicle</th>
+                  <th className="px-4 py-3 font-medium">Ride Info</th>
+                  <th className="px-4 py-3 font-medium">Locations</th>
+                  <th className="px-4 py-3 font-medium">Fare & Distance</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Vehicle</th>
                   <th
-                    className="px-4 py-3 cursor-pointer select-none"
+                    className="px-4 py-3 font-medium cursor-pointer select-none hover:bg-muted/60 transition-colors"
                     onClick={() => handleSort("createdAt")}
                   >
                     <div className="inline-flex items-center gap-1.5">
@@ -270,16 +424,32 @@ export default function GetRide() {
                       )}
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-right">Actions</th>
+                  <th className="px-4 py-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedRides.length === 0 ? (
+                {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="py-10 text-center">
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Search className="h-8 w-8" />
-                        <p>No rides found. Try adjusting filters.</p>
+                    <td colSpan={7} className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-muted-foreground">
+                          Loading available rides...
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : paginatedRides.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-20 text-center">
+                      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                        <Search className="h-12 w-12" />
+                        <p className="text-lg font-medium">
+                          No ride requests found
+                        </p>
+                        <p className="text-sm">
+                          Try adjusting your filters or check back later.
+                        </p>
                         <Button variant="outline" onClick={clearFilters}>
                           Clear Filters
                         </Button>
@@ -287,39 +457,41 @@ export default function GetRide() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedRides.map((ride) => (
+                  paginatedRides.map((ride: IRide) => (
                     <tr
                       key={ride._id}
                       className="border-b hover:bg-muted/40 transition-colors"
                     >
                       {/* Ride Info */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex flex-col gap-1">
-                          <div className="font-medium text-sm">
-                            #{ride._id.slice(-6)}
+                          <div className="font-semibold text-sm">
+                            #{ride._id.slice(-6).toUpperCase()}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Driver: {ride.driverId.slice(-6)}
+                            Rider: {ride.riderId.slice(-6)}
                           </div>
                         </div>
                       </td>
 
                       {/* Locations */}
-                      <td className="px-4 py-3">
-                        <div className="flex flex-col gap-2">
+                      <td className="px-4 py-4">
+                        <div className="flex flex-col gap-3">
                           <div className="flex items-start gap-2">
-                            <MapPin className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
+                            <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
                             <div className="text-xs">
-                              <div className="font-medium">From</div>
+                              <div className="font-medium text-green-700">
+                                From
+                              </div>
                               <div className="text-muted-foreground truncate max-w-[150px]">
                                 {ride.pickupLocation.name}
                               </div>
                             </div>
                           </div>
                           <div className="flex items-start gap-2">
-                            <MapPin className="h-3 w-3 text-red-600 mt-1 flex-shrink-0" />
+                            <div className="w-2 h-2 bg-red-500 rounded-full mt-2 flex-shrink-0" />
                             <div className="text-xs">
-                              <div className="font-medium">To</div>
+                              <div className="font-medium text-red-700">To</div>
                               <div className="text-muted-foreground truncate max-w-[150px]">
                                 {ride.destinationLocation.name}
                               </div>
@@ -329,11 +501,11 @@ export default function GetRide() {
                       </td>
 
                       {/* Fare & Distance */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <div className="flex flex-col gap-1">
                           <div className="flex items-center gap-1">
                             <FaBangladeshiTakaSign className="h-3 w-3 text-green-600" />
-                            <span className="font-medium">
+                            <span className="font-semibold text-lg">
                               {ride.fare.toFixed(2)}
                             </span>
                           </div>
@@ -344,25 +516,17 @@ export default function GetRide() {
                       </td>
 
                       {/* Status */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <Badge
                           variant="outline"
-                          className={
-                            statusConfig[
-                              ride.status as keyof typeof statusConfig
-                            ]?.color
-                          }
+                          className={statusConfig.REQUESTED.color}
                         >
-                          {
-                            statusConfig[
-                              ride.status as keyof typeof statusConfig
-                            ]?.label
-                          }
+                          {statusConfig.REQUESTED.label}
                         </Badge>
                       </td>
 
                       {/* Vehicle */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-4">
                         <Badge
                           variant="outline"
                           className={
@@ -385,21 +549,31 @@ export default function GetRide() {
                       </td>
 
                       {/* Date */}
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="px-4 py-4 text-sm text-muted-foreground">
                         {formatDate(ride.createdAt)}
-                        date
                       </td>
 
                       {/* Actions */}
-                      <td className="px-4 py-3 text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center gap-2"
-                        >
-                          <CiCircleCheck className="h-4 w-4" />
-                          Accept Ride
-                        </Button>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex items-center gap-2 justify-end">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRejectRide(ride)}
+                            className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Reject
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleAcceptRide(ride)}
+                            className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            Accept
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -409,6 +583,33 @@ export default function GetRide() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Page {filters.page} of {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(filters.page - 1)}
+              disabled={filters.page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(filters.page + 1)}
+              disabled={filters.page === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

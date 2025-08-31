@@ -39,13 +39,22 @@ export const driverApi = baseApi.injectEndpoints({
       transformResponse: (response: IResponse<IRide[]>) => response.data,
     }),
 
+    getRequestedRides: builder.query<IRide[], void>({
+      query: () => ({
+        url: "/ride/requested",
+        method: "GET",
+      }),
+      providesTags: ["RIDE"],
+      transformResponse: (response: IResponse<IRide[]>) => response.data,
+    }),
+
     updateAvailability: builder.mutation<IResponse<IDriver>, IAvailability>({
       query: (userInfo) => ({
-        url: "/driver/update-availability",
+        url: "/driver/availability",
         method: "PATCH",
         data: userInfo,
       }),
-      // providesTags: ["RIDE"],
+      invalidatesTags: ["DRIVER"],
     }),
   }),
 });
@@ -54,4 +63,6 @@ export const {
   useApplyDriverMutation,
   useDriverApplicationQuery,
   useGetAllRideQuery,
+  useGetRequestedRidesQuery,
+  useUpdateAvailabilityMutation,
 } = driverApi;

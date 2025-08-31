@@ -43,6 +43,7 @@ export interface IAvailability {
 export const AVAILABILITY = {
   AVAILABLE: "AVAILABLE",
   UNAVAILABLE: "UNAVAILABLE",
+  ON_TRIP: "ON_TRIP",
 } as const;
 
 export type Availability = (typeof AVAILABILITY)[keyof typeof AVAILABILITY];

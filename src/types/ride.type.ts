@@ -6,19 +6,22 @@ export interface IRide {
   destinationLocation: DestinationLocation;
   fare: number;
   distance: number;
-  status:
-    | "REQUESTED"
-    | "ACCEPTED"
-    | "REJECTED"
-    | "PICKED_UP"
-    | "IN_TRANSIT"
-    | "COMPLETED"
-    | "CANCELLED";
+  status: RideStatus;
   vehicleType: "CAR" | "BIKE";
   timestamps: IRideTimestamps;
   createdAt: string;
   updatedAt: string;
 }
+
+// Ride Status
+export type RideStatus =
+  | "REQUESTED"
+  | "ACCEPTED"
+  | "REJECTED"
+  | "PICKED_UP"
+  | "IN_TRANSIT"
+  | "COMPLETED"
+  | "CANCELLED";
 
 export interface IRideRequest {
   pickupLocation: PickupLocation;
