@@ -10,12 +10,13 @@ export type {
   ISetPassword,
 } from "./auth.type";
 export type { IUser } from "./user.type";
-export type { IRide, IRideRequest } from "./ride.type";
+export type { IRide, IRideRequest, RideStatus } from "./ride.type";
 export type {
   IDriverApplication,
   IDriver,
   Availability,
   DriverStatus,
+  IAvailability,
   VehicleType,
 } from "./driver.type";
 

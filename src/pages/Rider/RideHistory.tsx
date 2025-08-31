@@ -102,6 +102,9 @@ export default function RideHistory() {
     refetch,
   } = useGetAllRideRiderQuery();
 
+  // Ensure rides is always an array
+  const ridesArray = Array.isArray(rides) ? rides : [];
+
   const clearFilters = () => {
     setFilters({
       search: "",
@@ -125,7 +128,7 @@ export default function RideHistory() {
   // Client-side filtering
   const filteredRides = useMemo(() => {
     const term = filters.search.trim().toLowerCase();
-    return rides.filter((ride) => {
+    return ridesArray.filter((ride: IRide) => {
       const matchesSearch =
         term === "" ||
         ride.pickupLocation.name.toLowerCase().includes(term) ||
@@ -457,7 +460,7 @@ export default function RideHistory() {
         </p>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          Total rides: {rides.length}
+          Total rides: {ridesArray.length}
         </div>
       </div>
 
@@ -505,7 +508,7 @@ export default function RideHistory() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedRides.map((ride) => (
+                  paginatedRides.map((ride: IRide) => (
                     <tr
                       key={ride._id}
                       className="border-b hover:bg-muted/40 transition-colors"

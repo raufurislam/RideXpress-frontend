@@ -123,7 +123,7 @@ export default function Navbar() {
                       (link) =>
                         link.role === "PUBLIC" || link.role === data?.data?.role
                     )
-                    .map((link, index) => (
+                    .map((link) => (
                       <NavigationMenuItem
                         key={`${link.href}-${link.role}`}
                         className="w-full"

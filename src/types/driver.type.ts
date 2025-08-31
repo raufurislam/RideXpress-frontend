@@ -13,7 +13,7 @@ export interface IDriver {
   vehicleNumber: string;
   licenseNumber: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "SUSPEND";
-  availability: "AVAILABLE" | "UNAVAILABLE";
+  availability: "AVAILABLE" | "UNAVAILABLE" | "ON_TRIP";
   appliedAt: Date;
   approvedAt?: Date;
   earnings: number;
@@ -36,9 +36,14 @@ export const DRIVER_STATUS = {
 
 export type DriverStatus = (typeof DRIVER_STATUS)[keyof typeof DRIVER_STATUS];
 
+export interface IAvailability {
+  availability: "AVAILABLE" | "UNAVAILABLE" | "ON_TRIP";
+}
+
 export const AVAILABILITY = {
   AVAILABLE: "AVAILABLE",
   UNAVAILABLE: "UNAVAILABLE",
+  ON_TRIP: "ON_TRIP",
 } as const;
 
 export type Availability = (typeof AVAILABILITY)[keyof typeof AVAILABILITY];
