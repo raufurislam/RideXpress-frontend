@@ -286,34 +286,44 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-8">
             {/* Avatar Section */}
-            <div className="flex flex-col items-center space-y-6">
+            {/* Avatar Section */}
+            <div className="flex flex-col items-center space-y-4">
               <div className="relative group">
-                <Avatar className="h-28 w-28 ring-4 ring-primary/20 shadow-xl">
-                  <AvatarImage src={user.picture || ""} alt={user.name} />
-                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-bold text-4xl">
-                    {getUserInitial(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="absolute inset-0 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
-                  <Camera className="h-10 w-10 text-white" />
+                <div className="h-28 w-28 rounded-full ring-2 ring-primary/30 shadow-md overflow-hidden">
+                  {user.picture ? (
+                    <img
+                      src={user.picture}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="bg-primary/20 text-primary font-bold text-4xl flex items-center justify-center h-full w-full">
+                      {getUserInitial(user.name)}
+                    </div>
+                  )}
                 </div>
+
+                {/* Hover overlay */}
+                {isEditingProfile && (
+                  <div className="absolute inset-0 bg-black/25 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
+                )}
               </div>
 
               {/* Profile Picture URL Input */}
-              <div className="w-full max-w-md space-y-3">
+              <div className="w-full max-w-sm space-y-2">
                 <Label
                   htmlFor="picture"
                   className="text-sm font-medium flex items-center gap-2"
                 >
-                  <Link className="h-4 w-4" />
-                  Profile Picture URL
+                  <Link className="h-4 w-4" /> Profile Picture URL
                 </Label>
                 <div className="flex gap-2">
                   <Input
                     id="picture"
                     {...profileForm.register("picture")}
                     disabled={!isEditingProfile}
-                    className={!isEditingProfile ? "bg-muted/50" : ""}
                     placeholder="Enter image URL (e.g., imgbb link)"
                   />
                   {isEditingProfile && (
@@ -322,7 +332,6 @@ export default function Profile() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleImageUrlUpdate("")}
-                      className="shrink-0"
                     >
                       Clear
                     </Button>
