@@ -433,7 +433,7 @@ export default function RideDetails() {
                   <div className="text-2xl font-bold text-green-900">
                     ${ride.fare.toFixed(2)}
                   </div>
-                  <div className="text-xs text-green-700">Total Fare</div>
+                  <div className="text-xs text-green-700">Total Faresfdsf</div>
                 </div>
                 <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <MapPin className="h-6 w-6 text-blue-600 mx-auto mb-2" />

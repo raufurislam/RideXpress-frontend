@@ -4,6 +4,8 @@ import { role } from "@/constants/role";
 import About from "@/pages/About";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 import type { TRole } from "@/types";
 import { withAuth } from "@/utils/withAuth";
 import { createBrowserRouter, Navigate } from "react-router";
@@ -18,7 +20,7 @@ import { driverSidebarItems } from "./DriverSidebarItems";
 import Homepage from "@/pages/Homepage";
 import AccountStatus from "@/pages/AccountStatus";
 import GoogleCallback from "@/components/modules/Authentication/GoogleCallback";
-import RideDetails from "@/pages/Rider/RideDetails";
+// import RideDetails from "@/pages/Rider/RideDetails";
 
 export const router = createBrowserRouter([
   {
@@ -45,6 +47,10 @@ export const router = createBrowserRouter([
         Component: FAQ,
         path: "/faq",
       },
+      {
+        Component: withAuth(Profile),
+        path: "/profile",
+      },
     ],
   },
 
@@ -69,10 +75,10 @@ export const router = createBrowserRouter([
     ],
   },
 
-  {
-    Component: withAuth(RideDetails),
-    path: "/rider/ride-details/:rideId",
-  },
+  // {
+  //   Component: withAuth(RideDetails),
+  //   path: "/rider/ride-details/:rideId",
+  // },
 
   {
     Component: withAuth(DashboardLayout, role.driver as TRole),
@@ -90,6 +96,11 @@ export const router = createBrowserRouter([
   {
     Component: Register,
     path: "/register",
+  },
+
+  {
+    Component: withAuth(Settings),
+    path: "/settings",
   },
   {
     Component: Unauthorized,

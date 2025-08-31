@@ -26,6 +26,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     // navMain: adminSidebarItems,
     navMain: getSidebarItems(userData?.data?.role),
   };
+  /**
+   Argument of type 'Role | undefined' is not assignable to parameter of type 'TRole'.
+  Type 'undefined' is not assignable to type 'TRole'.ts(2345)
+const userData: IResponse<IUser> | undefined
+
+   */
 
   return (
     <Sidebar {...props}>

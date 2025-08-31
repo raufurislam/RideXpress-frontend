@@ -6,7 +6,7 @@ import { riderSidebarItems } from "@/routes/RiderSidebarItems";
 // import { adminSidebarItems } from "@/routes/AdminSidebarItems";
 import type { TRole } from "@/types";
 
-export const getSidebarItems = (userRole: TRole) => {
+export const getSidebarItems = (userRole?: TRole) => {
   // console.log(userRole);
   switch (userRole) {
     case role.superAdmin:

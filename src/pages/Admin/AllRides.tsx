@@ -219,13 +219,13 @@ export default function AllRides() {
         const fare = ride.fare;
         switch (filters.fareRange) {
           case "low":
-            matchesFareRange = fare < 20;
+            matchesFareRange = fare < 199;
             break;
           case "medium":
-            matchesFareRange = fare >= 20 && fare < 50;
+            matchesFareRange = fare >= 199 && fare < 499;
             break;
           case "high":
-            matchesFareRange = fare >= 50;
+            matchesFareRange = fare >= 500;
             break;
         }
       }
@@ -415,9 +415,9 @@ export default function AllRides() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Fares</SelectItem>
-                  <SelectItem value="low">Low (&lt;$20)</SelectItem>
-                  <SelectItem value="medium">Medium ($20-$50)</SelectItem>
-                  <SelectItem value="high">High (&gt;$50)</SelectItem>
+                  <SelectItem value="low">Low (&lt;$199)</SelectItem>
+                  <SelectItem value="medium">Medium ($200-$499)</SelectItem>
+                  <SelectItem value="high">High (&gt;$500)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
