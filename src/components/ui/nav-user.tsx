@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/sidebar";
 import type { IUser } from "@/types";
 import { ModeToggle } from "../layout/ModeToggler";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { LogOut, Settings, User } from "lucide-react";
 import { authApi, useLogoutMutation } from "@/redux/features/auth/auth.api";
 import { useAppDispatch } from "@/redux/hook";
@@ -30,6 +30,7 @@ export function NavUser({ user }: { user?: IUser }) {
 
   const [logout] = useLogoutMutation();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   // Get user's first character for avatar fallback
   const getUserInitial = (name: string) => {
@@ -39,6 +40,7 @@ export function NavUser({ user }: { user?: IUser }) {
   const handleLogout = async () => {
     await logout(undefined);
     dispatch(authApi.util.resetApiState());
+    navigate("/");
   };
 
   return (

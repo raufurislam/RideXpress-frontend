@@ -1,5 +1,6 @@
 import { baseApi } from "@/redux/baseApi";
 import type { IResponse, IRide, IRideRequest } from "@/types";
+import type { IRideTimestamps } from "@/types/ride.type";
 
 export const rideApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -29,6 +30,15 @@ export const rideApi = baseApi.injectEndpoints({
       }),
       providesTags: ["RIDE"],
     }),
+
+    updateRideStatus: builder.mutation<IResponse<IRide>, IRideTimestamps>({
+      query: (userInfo) => ({
+        url: "/ride/rideStatus/:rideId",
+        method: "PATCH",
+        data: userInfo,
+      }),
+      // providesTags: ["RIDE"],
+    }),
   }),
 });
 
@@ -36,4 +46,5 @@ export const {
   useRideRequestMutation,
   useGetAllRideRiderQuery,
   useLazyGetSingleRideRiderQuery,
+  useUpdateRideStatusMutation,
 } = rideApi;

@@ -16,6 +16,7 @@ export type {
   IDriver,
   Availability,
   DriverStatus,
+  IAvailability,
   VehicleType,
 } from "./driver.type";
 
