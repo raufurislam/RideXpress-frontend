@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import Logo from "@/assets/icons/Logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ModeToggle } from "./ModeToggler";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import {
   authApi,
   useLogoutMutation,
@@ -53,6 +54,8 @@ const navigationLinks = [
 
 export default function Navbar() {
   const { data } = useUserInfoQuery(undefined);
+  const location = useLocation();
+  const currentPath = location.pathname;
 
   const [logout] = useLogoutMutation();
   const dispatch = useAppDispatch();
@@ -115,13 +118,31 @@ export default function Navbar() {
             <PopoverContent align="start" className="w-36 p-1 md:hidden">
               <NavigationMenu className="max-w-none *:w-full">
                 <NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
-                  {navigationLinks.map((link, index) => (
-                    <NavigationMenuItem key={index} className="w-full">
-                      <NavigationMenuLink asChild className="py-1.5">
-                        <Link to={link.href}>{link.label} </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  ))}
+                  {navigationLinks
+                    .filter(
+                      (link) =>
+                        link.role === "PUBLIC" || link.role === data?.data?.role
+                    )
+                    .map((link, index) => (
+                      <NavigationMenuItem
+                        key={`${link.href}-${link.role}`}
+                        className="w-full"
+                      >
+                        <NavigationMenuLink asChild className="w-full">
+                          <Link
+                            to={link.href}
+                            className={`flex items-center gap-3 py-2 px-3 rounded-md transition-colors
+      ${
+        currentPath === link.href
+          ? "bg-primary/10  border-primary font-semibold text-primary"
+          : "text-muted-foreground hover:bg-accent/10"
+      }`}
+                          >
+                            {link.label}
+                          </Link>
+                        </NavigationMenuLink>
+                      </NavigationMenuItem>
+                    ))}
                 </NavigationMenuList>
               </NavigationMenu>
             </PopoverContent>
@@ -144,9 +165,20 @@ export default function Navbar() {
                     <NavigationMenuItem key={`${link.href}-${link.role}`}>
                       <NavigationMenuLink
                         asChild
-                        className="text-muted-foreground hover:text-primary py-1.5 font-medium transition-colors"
+                        className="py-1.5 font-medium transition-colors"
                       >
-                        <Link to={link.href}>{link.label}</Link>
+                        <Link
+                          to={link.href}
+                          className={`relative 
+      ${
+        currentPath === link.href
+          ? "text-foreground font-semibold after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:bg-primary"
+          : "text-muted-foreground hover:text-primary"
+      }
+    `}
+                        >
+                          {link.label}
+                        </Link>
                       </NavigationMenuLink>
                     </NavigationMenuItem>
                   ))}
