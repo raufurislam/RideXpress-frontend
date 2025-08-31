@@ -168,7 +168,7 @@ export default function Navbar() {
                         variant="ghost"
                         className="relative h-10 w-10 rounded-full p-0 hover:bg-accent transition-colors"
                       >
-                        <Avatar className="h-10 w-10">
+                        {/* <Avatar className="h-10 w-10">
                           <AvatarImage
                             src={data.data.picture || ""}
                             alt={data.data.name}
@@ -176,6 +176,18 @@ export default function Navbar() {
                           />
                           <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
                             {getUserInitial(data.data.name)}
+                          </AvatarFallback>
+                        </Avatar> */}
+                        <Avatar className="h-10 w-10">
+                          {data?.data?.picture ? (
+                            <AvatarImage
+                              src={data.data.picture}
+                              alt={data.data.name}
+                              className="object-cover"
+                            />
+                          ) : null}
+                          <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                            {getUserInitial(data?.data?.name || "U")}
                           </AvatarFallback>
                         </Avatar>
                       </Button>
@@ -192,7 +204,7 @@ export default function Navbar() {
                 >
                   {/* User Info Section */}
                   <div className="flex items-center gap-3 pb-3">
-                    <Avatar className="h-12 w-12">
+                    {/* <Avatar className="h-12 w-12">
                       <AvatarImage
                         src={data.data.picture || ""}
                         alt={data.data.name}
@@ -201,7 +213,21 @@ export default function Navbar() {
                       <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
                         {getUserInitial(data.data.name)}
                       </AvatarFallback>
+                    </Avatar> */}
+
+                    <Avatar className="h-12 w-12">
+                      {data?.data?.picture ? (
+                        <AvatarImage
+                          src={data.data.picture}
+                          alt={data.data.name}
+                          className="object-cover"
+                        />
+                      ) : null}
+                      <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xl">
+                        {getUserInitial(data?.data?.name || "U")}
+                      </AvatarFallback>
                     </Avatar>
+
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-foreground truncate">
                         {data.data.name}
