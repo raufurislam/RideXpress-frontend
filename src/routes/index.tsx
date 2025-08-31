@@ -47,6 +47,10 @@ export const router = createBrowserRouter([
         Component: FAQ,
         path: "/faq",
       },
+      {
+        Component: withAuth(Profile),
+        path: "/profile",
+      },
     ],
   },
 
@@ -93,10 +97,7 @@ export const router = createBrowserRouter([
     Component: Register,
     path: "/register",
   },
-  {
-    Component: withAuth(Profile),
-    path: "/profile",
-  },
+
   {
     Component: withAuth(Settings),
     path: "/settings",
