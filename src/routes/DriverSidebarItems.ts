@@ -18,7 +18,7 @@ export const driverSidebarItems: ISidebarItem[] = [
         component: GetRide,
       },
       {
-        title: "My Driving profile",
+        title: "Driving profile",
         url: "/driver/driving-profile",
         component: DrivingProfile,
       },
