@@ -1,8 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useGetAllRideQuery, useUpdateAvailabilityMutation } from "@/redux/features/driver/driver.api";
+import {
+  useGetAllRideQuery,
+  useGetDriverMyProfileQuery,
+  useUpdateMyProfileMutation,
+} from "@/redux/features/driver/driver.api";
 import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
 import {
   MapPin,
@@ -20,14 +25,17 @@ import { FaBangladeshiTakaSign as TakaIcon } from "react-icons/fa6";
 import { toast } from "sonner";
 import { type IRide, type RideStatus } from "@/types";
 
-const statusConfig: Record<RideStatus, {
-  label: string;
-  color: string;
-  icon: React.ComponentType<{ className?: string }>;
-  nextStatus: RideStatus | null;
-  nextLabel: string | null;
-  description: string;
-}> = {
+const statusConfig: Record<
+  RideStatus,
+  {
+    label: string;
+    color: string;
+    icon: React.ComponentType<{ className?: string }>;
+    nextStatus: RideStatus | null;
+    nextLabel: string | null;
+    description: string;
+  }
+> = {
   REQUESTED: {
     label: "Requested",
     color: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -100,28 +108,60 @@ const vehicleTypeConfig = {
 };
 
 export default function ActiveRides() {
-  const { data: allRides = [], isLoading, error, refetch } = useGetAllRideQuery();
+  const {
+    data: allRides = [],
+    isLoading,
+    error,
+    refetch,
+  } = useGetAllRideQuery();
+
   const [updateRideStatus] = useUpdateRideStatusMutation();
-  const [updateAvailability] = useUpdateAvailabilityMutation();
+  const [updateMyProfile] = useUpdateMyProfileMutation();
+  const { data: driverProfile, refetch: refetchDriver } =
+    useGetDriverMyProfileQuery();
 
   // Filter rides to show only active ones (not REQUESTED or REJECTED)
+  // const activeRides = useMemo(() => {
+  //   return allRides.filter(
+  //     (ride) =>
+  //       ride.status !== "REQUESTED" &&
+  //       ride.status !== "REJECTED" &&
+  //       ride.status !== "CANCELLED"
+  //   );
+  // }, [allRides]);
+
   const activeRides = useMemo(() => {
-    return allRides.filter(ride => 
-      ride.status !== "REQUESTED" && 
-      ride.status !== "REJECTED" && 
-      ride.status !== "CANCELLED"
-    );
+    return allRides
+      .filter(
+        (ride) =>
+          ride.status !== "REQUESTED" &&
+          ride.status !== "REJECTED" &&
+          ride.status !== "CANCELLED"
+      )
+      .sort((a, b) => {
+        // 🚨 Incomplete rides first (not COMPLETED)
+        if (a.status !== "COMPLETED" && b.status === "COMPLETED") return -1;
+        if (a.status === "COMPLETED" && b.status !== "COMPLETED") return 1;
+
+        // ✅ Among incomplete, prioritize ACCEPTED rides
+        if (a.status === "ACCEPTED" && b.status !== "ACCEPTED") return -1;
+        if (b.status === "ACCEPTED" && a.status !== "ACCEPTED") return 1;
+
+        // ✅ Then sort by latest createdAt
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
   }, [allRides]);
 
   // Check if driver has any active rides
   const hasActiveRides = activeRides.length > 0;
 
   useEffect(() => {
-    // If no active rides, automatically set availability to AVAILABLE
     if (!hasActiveRides) {
-      updateAvailability({ availability: "AVAILABLE" });
+      updateMyProfile({ availability: "AVAILABLE" });
     }
-  }, [hasActiveRides, updateAvailability]);
+  }, [hasActiveRides, updateMyProfile]);
 
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
@@ -137,23 +177,30 @@ export default function ActiveRides() {
   const handleUpdateRideStatus = async (ride: IRide, newStatus: RideStatus) => {
     try {
       await updateRideStatus({
-        rideId: ride._id,
-        status: newStatus
+        rideId: (ride as any)._id,
+        rideStatus: newStatus,
       }).unwrap();
 
-      toast.success(`Ride status updated to ${statusConfig[newStatus as keyof typeof statusConfig]?.label}`);
+      toast.success(`Ride status updated to ${statusConfig[newStatus]?.label}`);
 
-      // If ride is completed, set availability to AVAILABLE
-      if (newStatus === "COMPLETED") {
-        await updateAvailability({ availability: "AVAILABLE" });
-        toast.success("You are now available for new rides!");
+      if (newStatus === "PICKED_UP" || newStatus === "IN_TRANSIT") {
+        await updateMyProfile({ availability: "ON_TRIP" }).unwrap();
+        await refetchDriver();
+        toast.info("You are now on a trip.");
       }
 
-      refetch(); // Refresh the list
+      if (newStatus === "COMPLETED") {
+        await updateMyProfile({ availability: "AVAILABLE" }).unwrap();
+        await refetchDriver();
+        toast.success("Ride completed! You are now available for new rides.");
+      }
 
-    } catch (error) {
-      console.error("Failed to update ride status:", error);
-      toast.error("Failed to update ride status. Please try again.");
+      refetch(); // refresh rides
+    } catch (error: any) {
+      const message =
+        error?.data?.message ||
+        "Failed to update ride status. Please follow the required sequence.";
+      toast.error(message);
     }
   };
 
@@ -162,8 +209,12 @@ export default function ActiveRides() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Rides</h3>
-          <p className="text-gray-600 mb-4">Failed to load active rides. Please try again.</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Error Loading Rides
+          </h3>
+          <p className="text-gray-600 mb-4">
+            Failed to load active rides. Please try again.
+          </p>
           <Button onClick={() => refetch()} variant="outline">
             <RefreshCw className="h-4 w-4 mr-2" />
             Retry
@@ -180,9 +231,12 @@ export default function ActiveRides() {
           <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="h-12 w-12 text-green-600" />
           </div>
-          <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Active Rides</h3>
+          <h3 className="text-2xl font-semibold text-gray-900 mb-2">
+            No Active Rides
+          </h3>
           <p className="text-gray-600 mb-6 max-w-md">
-            You are currently available for new ride requests. Check the "Get Ride" page to find available rides.
+            You are currently available for new ride requests. Check the "Get
+            Ride" page to find available rides.
           </p>
           <div className="flex items-center gap-2 justify-center text-sm text-green-600">
             <CheckCircle className="h-4 w-4" />
@@ -227,24 +281,94 @@ export default function ActiveRides() {
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Rides</p>
+                <p className="text-sm text-muted-foreground">Total Rides</p>
                 <p className="text-2xl font-bold">{activeRides.length}</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Availability Status Card */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle
+                  className={`h-5 w-5 ${
+                    driverProfile?.availability === "AVAILABLE"
+                      ? "text-green-600"
+                      : driverProfile?.availability === "ON_TRIP"
+                      ? "text-yellow-600"
+                      : "text-gray-600"
+                  }`}
+                />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-2xl font-bold text-green-600">On Trip</p>
+                <p
+                  className={`text-2xl font-bold ${
+                    driverProfile?.availability === "AVAILABLE"
+                      ? "text-green-600"
+                      : driverProfile?.availability === "ON_TRIP"
+                      ? "text-yellow-600"
+                      : "text-gray-600"
+                  }`}
+                >
+                  {driverProfile?.availability}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      driverProfile?.availability === "AVAILABLE"
+                        ? "bg-green-500"
+                        : driverProfile?.availability === "ON_TRIP"
+                        ? "bg-yellow-500"
+                        : "bg-gray-400"
+                    }`}
+                  ></div>
+                  <span
+                    className={`text-sm font-medium ${
+                      driverProfile?.availability === "AVAILABLE"
+                        ? "text-green-600"
+                        : driverProfile?.availability === "ON_TRIP"
+                        ? "text-yellow-600"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {driverProfile?.availability === "AVAILABLE"
+                      ? "Available"
+                      : driverProfile?.availability === "ON_TRIP"
+                      ? "On Trip"
+                      : "Unavailable"}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {/* Toggle button (only show if not ON_TRIP) */}
+            {driverProfile?.availability !== "ON_TRIP" && (
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const newStatus =
+                      driverProfile?.availability === "AVAILABLE"
+                        ? "UNAVAILABLE"
+                        : "AVAILABLE";
+                    await updateMyProfile({ availability: newStatus }).unwrap();
+                    await refetchDriver();
+                    toast.success(
+                      `You are now marked as ${
+                        newStatus === "AVAILABLE" ? "Available" : "Unavailable"
+                      }.`
+                    );
+                  }}
+                >
+                  {driverProfile?.availability === "AVAILABLE"
+                    ? "Set Unavailable"
+                    : "Set Available"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -257,7 +381,9 @@ export default function ActiveRides() {
               <div>
                 <p className="text-sm text-muted-foreground">Next Action</p>
                 <p className="text-lg font-semibold text-purple-600">
-                  {activeRides[0]?.status === "COMPLETED" ? "Completed" : "Update Status"}
+                  {activeRides[0]?.status === "COMPLETED"
+                    ? "Completed"
+                    : "Update Status"}
                 </p>
               </div>
             </div>
@@ -267,12 +393,14 @@ export default function ActiveRides() {
 
       {/* Active Rides List */}
       <div className="space-y-4">
-                        {activeRides.map((ride: IRide) => {
-          const currentStatus = statusConfig[ride.status as keyof typeof statusConfig];
-          const canUpdate = currentStatus?.nextStatus && ride.status !== "COMPLETED";
+        {activeRides.map((ride: IRide) => {
+          const currentStatus =
+            statusConfig[ride.status as keyof typeof statusConfig];
+          const canUpdate =
+            currentStatus?.nextStatus && ride.status !== "COMPLETED";
 
           return (
-            <Card key={ride._id} className="overflow-hidden">
+            <Card key={(ride as any)._id} className="overflow-hidden">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -281,18 +409,20 @@ export default function ActiveRides() {
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        Ride #{ride._id.slice(-6).toUpperCase()}
+                        Ride #
+                        {String((ride as any)._id)
+                          .slice(-6)
+                          .toUpperCase()}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {currentStatus?.description}
                       </p>
                     </div>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className={currentStatus?.color}
-                  >
-                    {currentStatus?.icon && <currentStatus.icon className="h-3 w-3 mr-1" />}
+                  <Badge variant="outline" className={currentStatus?.color}>
+                    {currentStatus?.icon && (
+                      <currentStatus.icon className="h-3 w-3 mr-1" />
+                    )}
                     {currentStatus?.label}
                   </Badge>
                 </div>
@@ -377,10 +507,14 @@ export default function ActiveRides() {
                 {canUpdate && (
                   <div className="pt-4 border-t">
                     <Button
-                      onClick={() => handleUpdateRideStatus(ride, currentStatus.nextStatus!)}
+                      onClick={() =>
+                        handleUpdateRideStatus(ride, currentStatus.nextStatus!)
+                      }
                       className="w-full sm:w-auto"
                     >
-                      {currentStatus.icon && <currentStatus.icon className="h-4 w-4 mr-2" />}
+                      {currentStatus.icon && (
+                        <currentStatus.icon className="h-4 w-4 mr-2" />
+                      )}
                       {currentStatus.nextLabel}
                     </Button>
                   </div>
@@ -391,7 +525,9 @@ export default function ActiveRides() {
                   <div className="pt-4 border-t">
                     <div className="flex items-center gap-2 text-green-600 bg-green-50 p-3 rounded-lg">
                       <CheckCircle className="h-5 w-5" />
-                      <span className="font-medium">Ride completed! You are now available for new rides.</span>
+                      <span className="font-medium">
+                        Ride completed! You are now available for new rides.
+                      </span>
                     </div>
                   </div>
                 )}

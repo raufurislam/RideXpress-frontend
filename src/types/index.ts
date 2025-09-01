@@ -18,6 +18,8 @@ export type {
   DriverStatus,
   IAvailability,
   VehicleType,
+  IUpdateMyDriverProfile,
+  IDriverProfile,
 } from "./driver.type";
 
 export interface IResponse<T> {

@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,12 +11,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import {
   useGetAllRideQuery,
-  useUpdateAvailabilityMutation,
+  useGetDriverMyProfileQuery,
+  useUpdateMyProfileMutation,
 } from "@/redux/features/driver/driver.api";
 import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
+
 import {
   ArrowUpDown,
   Bike,
@@ -30,7 +42,7 @@ import {
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import { toast } from "sonner";
 import { type IRide } from "@/types";
-import { useNavigate } from "react-router";
+import { Switch } from "@/components/ui/switch";
 
 const statusConfig = {
   REQUESTED: {
@@ -66,19 +78,19 @@ const fareRangeConfig: Record<string, FareRange> = {
 
 export default function GetRide() {
   const navigate = useNavigate();
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
   const {
     data: allRides = [],
     isLoading,
     error,
     refetch,
   } = useGetAllRideQuery();
-
-  // Filter rides to show only REQUESTED status
-  const requestedRides = useMemo(() => {
-    return allRides.filter((ride: IRide) => ride.status === "REQUESTED");
-  }, [allRides]);
   const [updateRideStatus] = useUpdateRideStatusMutation();
-  const [updateAvailability] = useUpdateAvailabilityMutation();
+
+  const { data: driverProfile, refetch: refetchDriver } =
+    useGetDriverMyProfileQuery();
+
+  // const [updateAvailability] = useUpdateAvailabilityMutation();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -89,6 +101,11 @@ export default function GetRide() {
     sortBy: "createdAt" as string,
     sortOrder: "desc" as "asc" | "desc",
   });
+
+  // Filter rides to show only REQUESTED status
+  const requestedRides = useMemo(() => {
+    return allRides.filter((ride: IRide) => ride.status === "REQUESTED");
+  }, [allRides]);
 
   // Apply filters and sorting
   const filteredAndSortedRides = useMemo(() => {
@@ -131,8 +148,8 @@ export default function GetRide() {
 
     // Sorting
     filtered.sort((a, b) => {
-      const aValue = a[filters.sortBy as keyof typeof a];
-      const bValue = b[filters.sortBy as keyof typeof b];
+      const aValue = (a as any)[filters.sortBy as keyof typeof a];
+      const bValue = (b as any)[filters.sortBy as keyof typeof b];
 
       if (filters.sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
@@ -188,46 +205,39 @@ export default function GetRide() {
     });
   };
 
+  const [updateMyProfile] = useUpdateMyProfileMutation();
+
   const handleAcceptRide = async (ride: IRide) => {
     try {
-      // Update ride status to ACCEPTED
       await updateRideStatus({
-        rideId: ride._id,
-        status: "ACCEPTED",
+        rideId: (ride as any)._id,
+        rideStatus: "ACCEPTED",
       }).unwrap();
 
-      // Update driver availability to ON_TRIP
-      await updateAvailability({
-        availability: "ON_TRIP",
-      }).unwrap();
-
+      await updateMyProfile({ availability: "ON_TRIP" }).unwrap();
       toast.success(
         "Ride accepted successfully! Redirecting to Active Rides..."
       );
-
-      // Navigate to ActiveRides page
-      setTimeout(() => {
-        navigate("/driver/active-ride");
-      }, 1500);
-    } catch (error) {
-      console.error("Failed to accept ride:", error);
-      toast.error("Failed to accept ride. Please try again.");
+      setTimeout(() => navigate("/driver/active-ride"), 800);
+    } catch (error: any) {
+      const message =
+        error?.data?.message ||
+        "Failed to accept ride. Please ensure you meet the requirements.";
+      toast.error(message);
     }
   };
 
   const handleRejectRide = async (ride: IRide) => {
     try {
-      // Update ride status to REJECTED
       await updateRideStatus({
-        rideId: ride._id,
-        status: "REJECTED",
+        rideId: (ride as any)._id,
+        rideStatus: "REJECTED",
       }).unwrap();
-
       toast.success("Ride rejected successfully!");
-      refetch(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to reject ride:", error);
-      toast.error("Failed to reject ride. Please try again.");
+      refetch();
+    } catch (error: any) {
+      const message = error?.data?.message || "Failed to reject ride.";
+      toast.error(message);
     }
   };
 
@@ -251,6 +261,16 @@ export default function GetRide() {
     );
   }
 
+  const handleToggleAvailability = async (isChecked: boolean) => {
+    if (isChecked) {
+      await updateMyProfile({ availability: "AVAILABLE" }).unwrap();
+      await refetchDriver();
+      toast.success("You are now online and available for rides.");
+    } else {
+      setShowOfflineModal(true); // confirm before going offline
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -261,7 +281,7 @@ export default function GetRide() {
             Available ride requests. Accept to start earning!
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => refetch()}
@@ -273,6 +293,50 @@ export default function GetRide() {
             />
             Refresh
           </Button>
+          <Button variant="outline" onClick={clearFilters}>
+            Clear Filters
+          </Button>
+        </div> */}
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Availability Toggle */}
+          <div className="flex items-center gap-3 border rounded-md px-3 py-2 bg-card shadow-sm">
+            <Switch
+              checked={driverProfile?.availability === "AVAILABLE"}
+              onCheckedChange={handleToggleAvailability}
+              disabled={driverProfile?.availability === "ON_TRIP"}
+            />
+            <label
+              className={`text-sm font-medium ${
+                driverProfile?.availability === "AVAILABLE"
+                  ? "text-green-600"
+                  : driverProfile?.availability === "ON_TRIP"
+                  ? "text-yellow-600"
+                  : "text-gray-600"
+              }`}
+            >
+              {driverProfile?.availability === "ON_TRIP"
+                ? "On Trip"
+                : driverProfile?.availability === "AVAILABLE"
+                ? "Available"
+                : "Unavailable"}
+            </label>
+          </div>
+
+          {/* Refresh Button */}
+          <Button
+            variant="outline"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </Button>
+
+          {/* Clear Filters */}
           <Button variant="outline" onClick={clearFilters}>
             Clear Filters
           </Button>
@@ -459,17 +523,20 @@ export default function GetRide() {
                 ) : (
                   paginatedRides.map((ride: IRide) => (
                     <tr
-                      key={ride._id}
+                      key={(ride as any)._id}
                       className="border-b hover:bg-muted/40 transition-colors"
                     >
                       {/* Ride Info */}
                       <td className="px-4 py-4">
                         <div className="flex flex-col gap-1">
                           <div className="font-semibold text-sm">
-                            #{ride._id.slice(-6).toUpperCase()}
+                            #
+                            {String((ride as any)._id)
+                              .slice(-6)
+                              .toUpperCase()}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Rider: {ride.riderId.slice(-6)}
+                            Rider: {String((ride as any).riderId).slice(-6)}
                           </div>
                         </div>
                       </td>
@@ -550,7 +617,7 @@ export default function GetRide() {
 
                       {/* Date */}
                       <td className="px-4 py-4 text-sm text-muted-foreground">
-                        {formatDate(ride.createdAt)}
+                        {formatDate((ride as any).createdAt)}
                       </td>
 
                       {/* Actions */}
@@ -610,6 +677,35 @@ export default function GetRide() {
           </div>
         </div>
       )}
+      <Dialog open={showOfflineModal} onOpenChange={setShowOfflineModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Go Offline?</DialogTitle>
+            <DialogDescription>
+              If you go offline, you will stop receiving new ride requests.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowOfflineModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700"
+              onClick={async () => {
+                await updateMyProfile({ availability: "UNAVAILABLE" }).unwrap();
+                await refetchDriver();
+                toast.info("You are currently offline.");
+                setShowOfflineModal(false);
+              }}
+            >
+              Go Offline
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
