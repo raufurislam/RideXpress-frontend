@@ -1,4 +1,5 @@
 import ActiveRides from "@/pages/Driver/ActiveRides";
+import DrivingProfile from "@/pages/Driver/DrivingProfile";
 import GetRide from "@/pages/Driver/GetRide";
 import type { ISidebarItem } from "@/types";
 
@@ -15,6 +16,11 @@ export const driverSidebarItems: ISidebarItem[] = [
         title: "Get Ride",
         url: "/driver/get-ride",
         component: GetRide,
+      },
+      {
+        title: "My Driving profile",
+        url: "/driver/driving-profile",
+        component: DrivingProfile,
       },
     ],
   },

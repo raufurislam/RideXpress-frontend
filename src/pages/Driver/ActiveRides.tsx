@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   useGetAllRideQuery,
   useGetDriverMyProfileQuery,
-  useUpdateAvailabilityMutation,
   useUpdateMyProfileMutation,
 } from "@/redux/features/driver/driver.api";
 import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
@@ -115,7 +114,6 @@ export default function ActiveRides() {
     error,
     refetch,
   } = useGetAllRideQuery();
-  const [updateAvailability] = useUpdateAvailabilityMutation();
 
   const [updateRideStatus] = useUpdateRideStatusMutation();
   const [updateMyProfile] = useUpdateMyProfileMutation();
@@ -151,29 +149,6 @@ export default function ActiveRides() {
       minute: "2-digit",
     });
   };
-
-  // const handleUpdateRideStatus = async (ride: IRide, newStatus: RideStatus) => {
-  //   try {
-  //     await updateRideStatus({
-  //       rideId: (ride as any)._id,
-  //       rideStatus: newStatus,
-  //     }).unwrap();
-
-  //     toast.success(`Ride status updated to ${statusConfig[newStatus]?.label}`);
-
-  //     if (newStatus === "COMPLETED") {
-  //       await updateAvailability({ availability: "AVAILABLE" });
-  //       toast.success("You are now available for new rides!");
-  //     }
-
-  //     refetch();
-  //   } catch (error: any) {
-  //     const message =
-  //       error?.data?.message ||
-  //       "Failed to update ride status. Please follow the required sequence.";
-  //     toast.error(message);
-  //   }
-  // };
 
   const handleUpdateRideStatus = async (ride: IRide, newStatus: RideStatus) => {
     try {
@@ -289,21 +264,87 @@ export default function ActiveRides() {
           </CardContent>
         </Card>
 
+        {/* Availability Status Card */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle
+                  className={`h-5 w-5 ${
+                    driverProfile?.availability === "AVAILABLE"
+                      ? "text-green-600"
+                      : driverProfile?.availability === "ON_TRIP"
+                      ? "text-yellow-600"
+                      : "text-gray-600"
+                  }`}
+                />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">
-                  Availability Status
-                </p>
-                <p className="text-2xl font-bold text-green-600">
+                <p
+                  className={`text-2xl font-bold ${
+                    driverProfile?.availability === "AVAILABLE"
+                      ? "text-green-600"
+                      : driverProfile?.availability === "ON_TRIP"
+                      ? "text-yellow-600"
+                      : "text-gray-600"
+                  }`}
+                >
                   {driverProfile?.availability}
                 </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      driverProfile?.availability === "AVAILABLE"
+                        ? "bg-green-500"
+                        : driverProfile?.availability === "ON_TRIP"
+                        ? "bg-yellow-500"
+                        : "bg-gray-400"
+                    }`}
+                  ></div>
+                  <span
+                    className={`text-sm font-medium ${
+                      driverProfile?.availability === "AVAILABLE"
+                        ? "text-green-600"
+                        : driverProfile?.availability === "ON_TRIP"
+                        ? "text-yellow-600"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {driverProfile?.availability === "AVAILABLE"
+                      ? "Available"
+                      : driverProfile?.availability === "ON_TRIP"
+                      ? "On Trip"
+                      : "Unavailable"}
+                  </span>
+                </div>
               </div>
             </div>
+
+            {/* Toggle button (only show if not ON_TRIP) */}
+            {driverProfile?.availability !== "ON_TRIP" && (
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const newStatus =
+                      driverProfile?.availability === "AVAILABLE"
+                        ? "UNAVAILABLE"
+                        : "AVAILABLE";
+                    await updateMyProfile({ availability: newStatus }).unwrap();
+                    await refetchDriver();
+                    toast.success(
+                      `You are now marked as ${
+                        newStatus === "AVAILABLE" ? "Available" : "Unavailable"
+                      }.`
+                    );
+                  }}
+                >
+                  {driverProfile?.availability === "AVAILABLE"
+                    ? "Set Unavailable"
+                    : "Set Available"}
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
