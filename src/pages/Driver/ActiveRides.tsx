@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   useGetAllRideQuery,
+  useGetDriverMyProfileQuery,
   useUpdateAvailabilityMutation,
+  useUpdateMyProfileMutation,
 } from "@/redux/features/driver/driver.api";
 import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
 import {
@@ -112,8 +115,12 @@ export default function ActiveRides() {
     error,
     refetch,
   } = useGetAllRideQuery();
-  const [updateRideStatus] = useUpdateRideStatusMutation();
   const [updateAvailability] = useUpdateAvailabilityMutation();
+
+  const [updateRideStatus] = useUpdateRideStatusMutation();
+  const [updateMyProfile] = useUpdateMyProfileMutation();
+  const { data: driverProfile, refetch: refetchDriver } =
+    useGetDriverMyProfileQuery();
 
   // Filter rides to show only active ones (not REQUESTED or REJECTED)
   const activeRides = useMemo(() => {
@@ -129,11 +136,10 @@ export default function ActiveRides() {
   const hasActiveRides = activeRides.length > 0;
 
   useEffect(() => {
-    // If no active rides, automatically set availability to AVAILABLE
     if (!hasActiveRides) {
-      updateAvailability({ availability: "AVAILABLE" });
+      updateMyProfile({ availability: "AVAILABLE" });
     }
-  }, [hasActiveRides, updateAvailability]);
+  }, [hasActiveRides, updateMyProfile]);
 
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
@@ -146,6 +152,29 @@ export default function ActiveRides() {
     });
   };
 
+  // const handleUpdateRideStatus = async (ride: IRide, newStatus: RideStatus) => {
+  //   try {
+  //     await updateRideStatus({
+  //       rideId: (ride as any)._id,
+  //       rideStatus: newStatus,
+  //     }).unwrap();
+
+  //     toast.success(`Ride status updated to ${statusConfig[newStatus]?.label}`);
+
+  //     if (newStatus === "COMPLETED") {
+  //       await updateAvailability({ availability: "AVAILABLE" });
+  //       toast.success("You are now available for new rides!");
+  //     }
+
+  //     refetch();
+  //   } catch (error: any) {
+  //     const message =
+  //       error?.data?.message ||
+  //       "Failed to update ride status. Please follow the required sequence.";
+  //     toast.error(message);
+  //   }
+  // };
+
   const handleUpdateRideStatus = async (ride: IRide, newStatus: RideStatus) => {
     try {
       await updateRideStatus({
@@ -155,12 +184,19 @@ export default function ActiveRides() {
 
       toast.success(`Ride status updated to ${statusConfig[newStatus]?.label}`);
 
-      if (newStatus === "COMPLETED") {
-        await updateAvailability({ availability: "AVAILABLE" });
-        toast.success("You are now available for new rides!");
+      if (newStatus === "PICKED_UP" || newStatus === "IN_TRANSIT") {
+        await updateMyProfile({ availability: "ON_TRIP" }).unwrap();
+        await refetchDriver();
+        toast.info("You are now on a trip.");
       }
 
-      refetch();
+      if (newStatus === "COMPLETED") {
+        await updateMyProfile({ availability: "AVAILABLE" }).unwrap();
+        await refetchDriver();
+        toast.success("Ride completed! You are now available for new rides.");
+      }
+
+      refetch(); // refresh rides
     } catch (error: any) {
       const message =
         error?.data?.message ||
@@ -246,7 +282,7 @@ export default function ActiveRides() {
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Active Rides</p>
+                <p className="text-sm text-muted-foreground">Total Rides</p>
                 <p className="text-2xl font-bold">{activeRides.length}</p>
               </div>
             </div>
@@ -260,8 +296,12 @@ export default function ActiveRides() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <p className="text-2xl font-bold text-green-600">On Trip</p>
+                <p className="text-sm text-muted-foreground">
+                  Availability Status
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  {driverProfile?.availability}
+                </p>
               </div>
             </div>
           </CardContent>

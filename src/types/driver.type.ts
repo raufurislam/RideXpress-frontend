@@ -47,3 +47,27 @@ export const AVAILABILITY = {
 } as const;
 
 export type Availability = (typeof AVAILABILITY)[keyof typeof AVAILABILITY];
+
+// Driver update payload
+export interface IUpdateMyDriverProfile {
+  vehicleType?: VehicleType;
+  vehicleModel?: string;
+  vehicleNumber?: string;
+  licenseNumber?: string;
+  availability?: Availability;
+}
+
+// Driver profile response
+export interface IDriverProfile {
+  _id: string;
+  userId: string;
+  vehicleType: VehicleType;
+  vehicleModel: string;
+  vehicleNumber: string;
+  licenseNumber: string;
+  status: DriverStatus;
+  availability: Availability;
+  appliedAt: Date;
+  approvedAt?: Date;
+  earnings: number;
+}

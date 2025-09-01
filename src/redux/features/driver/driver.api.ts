@@ -6,6 +6,8 @@ import type {
   IDriverApplication,
   IRide,
   IAvailability,
+  IDriverProfile,
+  IUpdateMyDriverProfile,
 } from "@/types";
 
 export const driverApi = baseApi.injectEndpoints({
@@ -56,6 +58,29 @@ export const driverApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["DRIVER"],
     }),
+
+    // GET my profile
+    getDriverMyProfile: builder.query<IDriverProfile, void>({
+      query: () => ({
+        url: "/driver/my-profile",
+        method: "GET",
+      }),
+      providesTags: ["DRIVER"],
+      transformResponse: (response: IResponse<IDriverProfile>) => response.data,
+    }),
+
+    // PATCH update my profile
+    updateMyProfile: builder.mutation<
+      IResponse<IDriverProfile>,
+      IUpdateMyDriverProfile
+    >({
+      query: (payload) => ({
+        url: "/driver/update-my-profile",
+        method: "PATCH",
+        data: payload,
+      }),
+      invalidatesTags: ["DRIVER"],
+    }),
   }),
 });
 
@@ -65,4 +90,6 @@ export const {
   useGetAllRideQuery,
   useGetRequestedRidesQuery,
   useUpdateAvailabilityMutation,
+  useGetDriverMyProfileQuery,
+  useUpdateMyProfileMutation,
 } = driverApi;

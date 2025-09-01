@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   useGetAllRideQuery,
-  useUpdateAvailabilityMutation,
+  useUpdateMyProfileMutation,
 } from "@/redux/features/driver/driver.api";
 import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
 import {
@@ -73,7 +74,7 @@ export default function GetRide() {
     refetch,
   } = useGetAllRideQuery();
   const [updateRideStatus] = useUpdateRideStatusMutation();
-  const [updateAvailability] = useUpdateAvailabilityMutation();
+  // const [updateAvailability] = useUpdateAvailabilityMutation();
 
   const [filters, setFilters] = useState({
     search: "",
@@ -188,13 +189,35 @@ export default function GetRide() {
     });
   };
 
+  // const handleAcceptRide = async (ride: IRide) => {
+  //   try {
+  //     await updateRideStatus({
+  //       rideId: (ride as any)._id,
+  //       rideStatus: "ACCEPTED",
+  //     }).unwrap();
+  //     await updateAvailability({ availability: "ON_TRIP" }).unwrap();
+  //     toast.success(
+  //       "Ride accepted successfully! Redirecting to Active Rides..."
+  //     );
+  //     setTimeout(() => navigate("/driver/active-ride"), 800);
+  //   } catch (error: any) {
+  //     const message =
+  //       error?.data?.message ||
+  //       "Failed to accept ride. Please ensure you meet the requirements.";
+  //     toast.error(message);
+  //   }
+  // };
+
+  const [updateMyProfile] = useUpdateMyProfileMutation();
+
   const handleAcceptRide = async (ride: IRide) => {
     try {
       await updateRideStatus({
         rideId: (ride as any)._id,
         rideStatus: "ACCEPTED",
       }).unwrap();
-      await updateAvailability({ availability: "ON_TRIP" }).unwrap();
+
+      await updateMyProfile({ availability: "ON_TRIP" }).unwrap();
       toast.success(
         "Ride accepted successfully! Redirecting to Active Rides..."
       );
