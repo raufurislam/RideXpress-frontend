@@ -121,13 +121,37 @@ export default function ActiveRides() {
     useGetDriverMyProfileQuery();
 
   // Filter rides to show only active ones (not REQUESTED or REJECTED)
+  // const activeRides = useMemo(() => {
+  //   return allRides.filter(
+  //     (ride) =>
+  //       ride.status !== "REQUESTED" &&
+  //       ride.status !== "REJECTED" &&
+  //       ride.status !== "CANCELLED"
+  //   );
+  // }, [allRides]);
+
   const activeRides = useMemo(() => {
-    return allRides.filter(
-      (ride) =>
-        ride.status !== "REQUESTED" &&
-        ride.status !== "REJECTED" &&
-        ride.status !== "CANCELLED"
-    );
+    return allRides
+      .filter(
+        (ride) =>
+          ride.status !== "REQUESTED" &&
+          ride.status !== "REJECTED" &&
+          ride.status !== "CANCELLED"
+      )
+      .sort((a, b) => {
+        // 🚨 Incomplete rides first (not COMPLETED)
+        if (a.status !== "COMPLETED" && b.status === "COMPLETED") return -1;
+        if (a.status === "COMPLETED" && b.status !== "COMPLETED") return 1;
+
+        // ✅ Among incomplete, prioritize ACCEPTED rides
+        if (a.status === "ACCEPTED" && b.status !== "ACCEPTED") return -1;
+        if (b.status === "ACCEPTED" && a.status !== "ACCEPTED") return 1;
+
+        // ✅ Then sort by latest createdAt
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      });
   }, [allRides]);
 
   // Check if driver has any active rides
