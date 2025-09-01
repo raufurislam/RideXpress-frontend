@@ -32,12 +32,12 @@ export const rideApi = baseApi.injectEndpoints({
 
     updateRideStatus: builder.mutation<
       IResponse<IRide>,
-      { rideId: string; status: RideStatus }
+      { rideId: string; rideStatus: RideStatus }
     >({
-      query: ({ rideId, status }) => ({
-        url: `/ride/${rideId}/status`,
+      query: ({ rideId, rideStatus }) => ({
+        url: `/ride/rideStatus/${rideId}`,
         method: "PATCH",
-        data: { status },
+        data: { rideStatus },
       }),
       invalidatesTags: ["RIDE"],
     }),

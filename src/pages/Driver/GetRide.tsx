@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,6 @@ import {
 import { FaBangladeshiTakaSign } from "react-icons/fa6";
 import { toast } from "sonner";
 import { type IRide } from "@/types";
-import { useNavigate } from "react-router";
 
 const statusConfig = {
   REQUESTED: {
@@ -72,11 +72,6 @@ export default function GetRide() {
     error,
     refetch,
   } = useGetAllRideQuery();
-
-  // Filter rides to show only REQUESTED status
-  const requestedRides = useMemo(() => {
-    return allRides.filter((ride: IRide) => ride.status === "REQUESTED");
-  }, [allRides]);
   const [updateRideStatus] = useUpdateRideStatusMutation();
   const [updateAvailability] = useUpdateAvailabilityMutation();
 
@@ -89,6 +84,11 @@ export default function GetRide() {
     sortBy: "createdAt" as string,
     sortOrder: "desc" as "asc" | "desc",
   });
+
+  // Filter rides to show only REQUESTED status
+  const requestedRides = useMemo(() => {
+    return allRides.filter((ride: IRide) => ride.status === "REQUESTED");
+  }, [allRides]);
 
   // Apply filters and sorting
   const filteredAndSortedRides = useMemo(() => {
@@ -131,8 +131,8 @@ export default function GetRide() {
 
     // Sorting
     filtered.sort((a, b) => {
-      const aValue = a[filters.sortBy as keyof typeof a];
-      const bValue = b[filters.sortBy as keyof typeof b];
+      const aValue = (a as any)[filters.sortBy as keyof typeof a];
+      const bValue = (b as any)[filters.sortBy as keyof typeof b];
 
       if (filters.sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
@@ -190,44 +190,34 @@ export default function GetRide() {
 
   const handleAcceptRide = async (ride: IRide) => {
     try {
-      // Update ride status to ACCEPTED
       await updateRideStatus({
-        rideId: ride._id,
-        status: "ACCEPTED",
+        rideId: (ride as any)._id,
+        rideStatus: "ACCEPTED",
       }).unwrap();
-
-      // Update driver availability to ON_TRIP
-      await updateAvailability({
-        availability: "ON_TRIP",
-      }).unwrap();
-
+      await updateAvailability({ availability: "ON_TRIP" }).unwrap();
       toast.success(
         "Ride accepted successfully! Redirecting to Active Rides..."
       );
-
-      // Navigate to ActiveRides page
-      setTimeout(() => {
-        navigate("/driver/active-ride");
-      }, 1500);
-    } catch (error) {
-      console.error("Failed to accept ride:", error);
-      toast.error("Failed to accept ride. Please try again.");
+      setTimeout(() => navigate("/driver/active-ride"), 800);
+    } catch (error: any) {
+      const message =
+        error?.data?.message ||
+        "Failed to accept ride. Please ensure you meet the requirements.";
+      toast.error(message);
     }
   };
 
   const handleRejectRide = async (ride: IRide) => {
     try {
-      // Update ride status to REJECTED
       await updateRideStatus({
-        rideId: ride._id,
-        status: "REJECTED",
+        rideId: (ride as any)._id,
+        rideStatus: "REJECTED",
       }).unwrap();
-
       toast.success("Ride rejected successfully!");
-      refetch(); // Refresh the list
-    } catch (error) {
-      console.error("Failed to reject ride:", error);
-      toast.error("Failed to reject ride. Please try again.");
+      refetch();
+    } catch (error: any) {
+      const message = error?.data?.message || "Failed to reject ride.";
+      toast.error(message);
     }
   };
 
@@ -459,17 +449,20 @@ export default function GetRide() {
                 ) : (
                   paginatedRides.map((ride: IRide) => (
                     <tr
-                      key={ride._id}
+                      key={(ride as any)._id}
                       className="border-b hover:bg-muted/40 transition-colors"
                     >
                       {/* Ride Info */}
                       <td className="px-4 py-4">
                         <div className="flex flex-col gap-1">
                           <div className="font-semibold text-sm">
-                            #{ride._id.slice(-6).toUpperCase()}
+                            #
+                            {String((ride as any)._id)
+                              .slice(-6)
+                              .toUpperCase()}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Rider: {ride.riderId.slice(-6)}
+                            Rider: {String((ride as any).riderId).slice(-6)}
                           </div>
                         </div>
                       </td>
@@ -550,7 +543,7 @@ export default function GetRide() {
 
                       {/* Date */}
                       <td className="px-4 py-4 text-sm text-muted-foreground">
-                        {formatDate(ride.createdAt)}
+                        {formatDate((ride as any).createdAt)}
                       </td>
 
                       {/* Actions */}
