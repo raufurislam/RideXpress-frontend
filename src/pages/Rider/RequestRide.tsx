@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -94,6 +95,7 @@ function calculateFare(distanceInKm: number, vehicleType: VehicleType): number {
 }
 
 export default function RequestRide() {
+  const navigate = useNavigate();
   const [pickupSuggestions, setPickupSuggestions] = useState<PlaceSuggestion[]>(
     []
   );
@@ -184,6 +186,7 @@ export default function RequestRide() {
       setDestinationSuggestions([]);
       setDistanceKm(null);
       setEstimatedFare(null);
+      navigate("/rider/active-ride-rider");
     } catch (e) {
       const maybe = e as { data?: { message?: string } };
       toast.error(maybe?.data?.message || "Failed to request ride");
