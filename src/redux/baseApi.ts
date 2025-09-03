@@ -8,6 +8,6 @@ export const baseApi = createApi({
   //   baseUrl: config.baseUrl,
   //   credentials: "include",
   // }),
-  tagTypes: ["USER", "DRIVER", "RIDE"],
+  tagTypes: ["USER", "DRIVER", "RIDE", "STATS"],
   endpoints: () => ({}),
 });

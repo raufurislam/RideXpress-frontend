@@ -1,8 +1,8 @@
 import AllDriver from "@/pages/Admin/AllDriver";
 import AllUser from "@/pages/Admin/AllUser";
 import AllRides from "@/pages/Admin/AllRides";
-import Analytics from "@/pages/Analytics";
 import type { ISidebarItem } from "@/types";
+import Analytics from "@/pages/Admin/Analytics";
 // import { lazy } from "react";
 
 // const Analytics = lazy(() => import("@/pages/Admin/Analytics"));

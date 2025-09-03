@@ -104,6 +104,7 @@ export default function DrivingProfile() {
       toast.success("Profile updated successfully");
       setIsEditing(false);
       refetch();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to update profile");
     }

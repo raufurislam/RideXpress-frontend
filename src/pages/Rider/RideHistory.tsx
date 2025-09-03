@@ -516,11 +516,19 @@ export default function RideHistory() {
                       {/* Ride Info */}
                       <td className="px-4 py-3">
                         <div className="flex flex-col gap-1">
-                          <div className="font-medium text-sm">
+                          {/* <div className="font-medium text-sm">
                             #{ride._id.slice(-6)}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             Driver: {ride.driverId.slice(-6)}
+                          </div> */}
+
+                          <div className="font-medium text-sm">
+                            #{ride._id ? ride._id.slice(-6) : "N/A"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Driver:{" "}
+                            {ride.driverId ? ride.driverId.slice(-6) : "N/A"}
                           </div>
                         </div>
                       </td>
@@ -681,8 +689,12 @@ export default function RideHistory() {
                     <label className="text-sm font-medium text-muted-foreground">
                       Ride ID
                     </label>
-                    <p className="font-mono text-sm">
+                    {/* <p className="font-mono text-sm">
                       #{selectedRide._id.slice(-6)}
+                    </p> */}
+
+                    <p className="font-mono text-sm">
+                      #{selectedRide._id ? selectedRide._id.slice(-6) : "N/A"}
                     </p>
                   </div>
                   <div>
