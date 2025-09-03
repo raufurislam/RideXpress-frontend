@@ -39,9 +39,9 @@ export default function Contact({
   };
 
   return (
-    <section className="py-16 px-4 ">
+    <section className="py-8 px-4 container mx-auto">
       <Toaster position="top-right" />
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-12 lg:gap-24">
+      <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
         {/* Left Info */}
         <div className="flex-1 flex flex-col justify-between gap-10">
           <div className="text-center lg:text-left">

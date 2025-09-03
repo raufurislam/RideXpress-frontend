@@ -21,7 +21,7 @@ export default function Features() {
         "Minimal design with intuitive navigation for a better experience.",
       icon: CheckCircle2,
     },
-  ];
+  ];   
 
   return (
     <section className="py-16 px-4 container mx-auto">
