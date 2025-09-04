@@ -11,6 +11,7 @@ export type {
 } from "./auth.type";
 export type { IUser } from "./user.type";
 export type { IRide, IRideRequest, RideStatus } from "./ride.type";
+export type { IPublicStats } from "./stats.type";
 export type {
   IDriverApplication,
   IDriver,

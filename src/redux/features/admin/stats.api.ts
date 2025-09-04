@@ -30,6 +30,11 @@ export const statsApi = baseApi.injectEndpoints({
       transformResponse: (res: IResponse<AnyObject>) => res.data,
       providesTags: ["STATS"],
     }),
+    getPublicStats: builder.query<AnyObject, void>({
+      query: () => ({ url: "/stats/public", method: "GET" }),
+      transformResponse: (res: IResponse<AnyObject>) => res.data,
+      providesTags: ["STATS"],
+    }),
   }),
 });
 
@@ -39,4 +44,5 @@ export const {
   useGetUserStatsQuery,
   useGetDriverStatsQuery,
   useGetRevenueStatsQuery,
+  useGetPublicStatsQuery,
 } = statsApi;

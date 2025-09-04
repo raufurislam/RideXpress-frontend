@@ -18,15 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-} from "recharts";
+
 import MultiLineChart from "@/redux/features/admin/MultiLineChart";
 
 type KV = { _id: string | number; count?: number; total?: number };
@@ -106,7 +98,7 @@ export default function Analytics() {
       ?.overview ?? ({} as Record<string, number>);
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {isDashboardLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
@@ -179,36 +171,6 @@ export default function Analytics() {
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Rides by Hour (last 24h)</CardTitle>
-        </CardHeader>
-        <CardContent className="h-72">
-          {isRidesLoading ? (
-            <Skeleton className="h-64" />
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={((rides?.ridesByHour as KV[]) ?? []).map((d) => ({
-                  hour: d._id,
-                  count: d.count,
-                }))}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(v: number) => [v, "rides"]} />
-                <Bar
-                  dataKey="count"
-                  fill="hsl(var(--primary))"
-                  radius={[4, 4, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
