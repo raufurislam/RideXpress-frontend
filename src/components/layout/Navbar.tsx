@@ -189,6 +189,12 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <div className="py-2">
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+            </div>
+          </div>
           {/* User Avatar Dropdown or Login Button */}
           {data?.data?.email ? (
             <TooltipProvider>
@@ -282,7 +288,7 @@ export default function Navbar() {
 
                   <DropdownMenuSeparator />
 
-                  {/* Theme Toggle */}
+                  {/* Theme Toggle
                   <div className="py-2">
                     <DropdownMenuLabel className="text-xs font-medium text-muted-foreground mb-2">
                       Theme
@@ -290,7 +296,7 @@ export default function Navbar() {
                     <div className="flex items-center gap-2">
                       <ModeToggle />
                     </div>
-                  </div>
+                  </div> */}
 
                   <DropdownMenuSeparator />
 
