@@ -9,6 +9,8 @@ import type {
   IDriverProfile,
   IUpdateMyDriverProfile,
   IDriverEarnings,
+  IDriverRideHistoryQuery,
+  IDriverRideHistoryResponse,
 } from "@/types";
 
 export const driverApi = baseApi.injectEndpoints({
@@ -95,10 +97,14 @@ export const driverApi = baseApi.injectEndpoints({
     }),
 
     // GET Driver ride history
-    getDriverRideHistory: builder.query({
-      query: () => ({
+    getDriverRideHistory: builder.query<
+      IResponse<IDriverRideHistoryResponse>,
+      IDriverRideHistoryQuery
+    >({
+      query: (params: IDriverRideHistoryQuery = {}) => ({
         url: "/driver/my-ride-history",
         method: "GET",
+        params,
       }),
       providesTags: ["DRIVER"],
     }),

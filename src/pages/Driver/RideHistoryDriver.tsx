@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -49,7 +50,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { FaBangladeshiTakaSign as TakaIcon } from "react-icons/fa6";
-import { type IRide, type RideStatus, type IUser } from "@/types";
+import {
+  type IRide,
+  type RideStatus,
+  type IUser,
+  type IDriverRideHistoryQuery,
+} from "@/types";
 import { format } from "date-fns";
 
 // Type for populated ride data
@@ -272,9 +278,26 @@ const RideDetails: React.FC<{ ride: IRide | IPopulatedRide }> = ({ ride }) => {
   );
 };
 
+// Custom hook for debounced search
+const useDebounce = (value: string, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 // Main component
 export default function RideHistoryDriver() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<IDriverRideHistoryQuery>({
     page: 1,
     limit: 10,
     status: "",
@@ -282,26 +305,62 @@ export default function RideHistoryDriver() {
     searchTerm: "",
   });
 
-  const { data, isLoading, error, refetch } =
-    useGetDriverRideHistoryQuery(filters);
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearchTerm = useDebounce(searchInput, 500);
 
-  const handleFilterChange = (key: string, value: string | number) => {
+  // Update search term when debounced value changes
+  React.useEffect(() => {
     setFilters((prev) => ({
       ...prev,
-      [key]: value,
-      page: 1, // Reset to first page when filters change
+      searchTerm: debouncedSearchTerm,
+      page: 1,
     }));
-  };
+  }, [debouncedSearchTerm]);
 
-  const handlePageChange = (page: number) => {
+  // Clean query parameters - remove empty strings and undefined values
+  const cleanQueryParams = useMemo(() => {
+    const cleaned = { ...filters };
+
+    // Remove empty strings and undefined values
+    Object.keys(cleaned).forEach((key) => {
+      if (
+        cleaned[key as keyof IDriverRideHistoryQuery] === "" ||
+        cleaned[key as keyof IDriverRideHistoryQuery] === undefined
+      ) {
+        delete cleaned[key as keyof IDriverRideHistoryQuery];
+      }
+    });
+
+    // Convert page and limit to numbers
+    if (cleaned.page) cleaned.page = Number(cleaned.page);
+    if (cleaned.limit) cleaned.limit = Number(cleaned.limit);
+
+    return cleaned;
+  }, [filters]);
+
+  const { data, isLoading, error, refetch } =
+    useGetDriverRideHistoryQuery(cleanQueryParams);
+
+  const handleFilterChange = useCallback(
+    (key: keyof IDriverRideHistoryQuery, value: string | number) => {
+      setFilters((prev) => ({
+        ...prev,
+        [key]: value,
+        page: 1, // Reset to first page when filters change
+      }));
+    },
+    []
+  );
+
+  const handlePageChange = useCallback((page: number) => {
     setFilters((prev) => ({ ...prev, page }));
-  };
+  }, []);
 
-  const handleSearch = (searchTerm: string) => {
-    setFilters((prev) => ({ ...prev, searchTerm, page: 1 }));
-  };
+  const handleSearchInputChange = useCallback((value: string) => {
+    setSearchInput(value);
+  }, []);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilters({
       page: 1,
       limit: 10,
@@ -309,18 +368,42 @@ export default function RideHistoryDriver() {
       vehicleType: "",
       searchTerm: "",
     });
-  };
+    setSearchInput("");
+  }, []);
 
   const rides: (IRide | IPopulatedRide)[] = data?.data?.data || [];
   const meta = data?.data?.meta;
 
-  // Generate pagination items
-  const generatePaginationItems = () => {
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return !!(filters.status || filters.vehicleType || filters.searchTerm);
+  }, [filters.status, filters.vehicleType, filters.searchTerm]);
+
+  // Generate pagination items with improved UX
+  const generatePaginationItems = useCallback(() => {
     if (!meta) return [];
 
     const items = [];
     const currentPage = meta.page;
     const totalPages = meta.totalPage;
+
+    // Show simplified pagination for small page counts
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              className="cursor-pointer"
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+      return items;
+    }
 
     // Previous button
     items.push(
@@ -330,59 +413,65 @@ export default function RideHistoryDriver() {
           className={
             currentPage <= 1
               ? "pointer-events-none opacity-50"
-              : "cursor-pointer"
+              : "cursor-pointer hover:bg-muted"
           }
         />
       </PaginationItem>
     );
 
-    // Page numbers
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, currentPage + 2);
+    // Always show first page
+    items.push(
+      <PaginationItem key={1}>
+        <PaginationLink
+          onClick={() => handlePageChange(1)}
+          isActive={currentPage === 1}
+          className="cursor-pointer"
+        >
+          1
+        </PaginationLink>
+      </PaginationItem>
+    );
 
-    if (startPage > 1) {
+    // Show ellipsis if current page is far from start
+    if (currentPage > 4) {
       items.push(
-        <PaginationItem key={1}>
-          <PaginationLink
-            onClick={() => handlePageChange(1)}
-            isActive={currentPage === 1}
-            className="cursor-pointer"
-          >
-            1
-          </PaginationLink>
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
         </PaginationItem>
       );
-      if (startPage > 2) {
-        items.push(
-          <PaginationItem key="ellipsis1">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
     }
+
+    // Show pages around current page
+    const startPage = Math.max(2, currentPage - 1);
+    const endPage = Math.min(totalPages - 1, currentPage + 1);
 
     for (let i = startPage; i <= endPage; i++) {
+      if (i !== 1 && i !== totalPages) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+              className="cursor-pointer"
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    }
+
+    // Show ellipsis if current page is far from end
+    if (currentPage < totalPages - 3) {
       items.push(
-        <PaginationItem key={i}>
-          <PaginationLink
-            onClick={() => handlePageChange(i)}
-            isActive={currentPage === i}
-            className="cursor-pointer"
-          >
-            {i}
-          </PaginationLink>
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
         </PaginationItem>
       );
     }
 
-    if (endPage < totalPages) {
-      if (endPage < totalPages - 1) {
-        items.push(
-          <PaginationItem key="ellipsis2">
-            <PaginationEllipsis />
-          </PaginationItem>
-        );
-      }
+    // Always show last page
+    if (totalPages > 1) {
       items.push(
         <PaginationItem key={totalPages}>
           <PaginationLink
@@ -406,19 +495,79 @@ export default function RideHistoryDriver() {
           className={
             currentPage >= totalPages
               ? "pointer-events-none opacity-50"
-              : "cursor-pointer"
+              : "cursor-pointer hover:bg-muted"
           }
         />
       </PaginationItem>
     );
 
     return items;
-  };
+  }, [meta, handlePageChange]);
 
-  if (isLoading) {
+  if (isLoading && !data) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="space-y-6">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-9 w-24" />
+        </div>
+
+        {/* Filters Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-16" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-4 w-20" />
+                </div>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center space-x-4">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -472,10 +621,14 @@ export default function RideHistoryDriver() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search rides..."
-                  value={filters.searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => handleSearchInputChange(e.target.value)}
                   className="pl-10"
+                  disabled={isLoading}
                 />
+                {isLoading && searchInput !== debouncedSearchTerm && (
+                  <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </div>
             </div>
 
@@ -483,8 +636,10 @@ export default function RideHistoryDriver() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
               <Select
-                value={filters.status}
-                onValueChange={(value) => handleFilterChange("status", value)}
+                value={filters.status || ""}
+                onValueChange={(value) =>
+                  handleFilterChange("status", value === "ALL" ? "" : value)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
@@ -506,9 +661,12 @@ export default function RideHistoryDriver() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Vehicle Type</label>
               <Select
-                value={filters.vehicleType}
+                value={filters.vehicleType || ""}
                 onValueChange={(value) =>
-                  handleFilterChange("vehicleType", value)
+                  handleFilterChange(
+                    "vehicleType",
+                    value === "ALL" ? "" : value
+                  )
                 }
               >
                 <SelectTrigger>
@@ -529,9 +687,7 @@ export default function RideHistoryDriver() {
                 variant="outline"
                 onClick={clearFilters}
                 className="w-full"
-                disabled={
-                  !filters.status && !filters.vehicleType && !filters.searchTerm
-                }
+                disabled={!hasActiveFilters}
               >
                 Clear Filters
               </Button>
@@ -697,11 +853,34 @@ export default function RideHistoryDriver() {
 
               {/* Pagination */}
               {meta && meta.totalPage > 1 && (
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {(meta.page - 1) * meta.limit + 1} to{" "}
-                    {Math.min(meta.page * meta.limit, meta.total)} of{" "}
-                    {meta.total} rides
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {(meta.page - 1) * meta.limit + 1} to{" "}
+                      {Math.min(meta.page * meta.limit, meta.total)} of{" "}
+                      {meta.total} rides
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm text-muted-foreground">
+                        Per page:
+                      </label>
+                      <Select
+                        value={filters.limit?.toString() || "10"}
+                        onValueChange={(value) =>
+                          handleFilterChange("limit", Number(value))
+                        }
+                      >
+                        <SelectTrigger className="w-20">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <Pagination>
                     <PaginationContent>

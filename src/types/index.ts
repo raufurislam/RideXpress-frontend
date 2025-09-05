@@ -23,6 +23,9 @@ export type {
   IDriverProfile,
   IDriverEarnings,
   IDriverEarningRide,
+  IDriverRideHistoryQuery,
+  IDriverRideHistoryMeta,
+  IDriverRideHistoryResponse,
 } from "./driver.type";
 
 export interface IResponse<T> {

@@ -107,3 +107,28 @@ export interface IDriverEarningRide {
   createdAt: string;
   updatedAt: string;
 }
+
+// Driver Ride History Query Parameters
+export interface IDriverRideHistoryQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+  vehicleType?: string;
+  searchTerm?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+// Driver Ride History Response Meta
+export interface IDriverRideHistoryMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPage: number;
+}
+
+// Driver Ride History Response
+export interface IDriverRideHistoryResponse {
+  data: any[]; // Will be populated rides
+  meta: IDriverRideHistoryMeta;
+}
