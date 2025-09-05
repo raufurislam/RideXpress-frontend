@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -32,6 +32,29 @@ import type { IDriverEarnings } from "@/types";
 interface EarningsDashboardProps {
   earningsData: IDriverEarnings;
   isLoading?: boolean;
+}
+
+// ✅ Define earnings entry type
+interface IEarningsEntry {
+  date?: string;
+  week?: string;
+  month?: string;
+  earnings: number;
+  rides: number;
+}
+
+interface IVehicleTypeSlice {
+  name: string;
+  value: number;
+  rides: number;
+  color: string;
+}
+
+interface IEarningsGroups {
+  daily: IEarningsEntry[];
+  weekly: IEarningsEntry[];
+  monthly: IEarningsEntry[];
+  vehicleTypeData: IVehicleTypeSlice[];
 }
 
 type TimeFilter = "daily" | "weekly" | "monthly";
@@ -91,7 +114,7 @@ export default function EarningsDashboard({
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("monthly");
 
   // Process data for different chart types
-  const processedData = useMemo(() => {
+  const processedData = useMemo<IEarningsGroups>(() => {
     if (!earningsData?.rides)
       return { daily: [], weekly: [], monthly: [], vehicleTypeData: [] };
 
@@ -157,24 +180,41 @@ export default function EarningsDashboard({
       return acc;
     }, []);
 
+    const daily = Object.values(
+      dailyEarnings as Record<string, IEarningsEntry>
+    ).sort(
+      (a, b) =>
+        new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime()
+    );
+
+    const weekly = Object.values(
+      weeklyEarnings as Record<string, IEarningsEntry>
+    ).sort(
+      (a, b) =>
+        new Date(a.week || 0).getTime() - new Date(b.week || 0).getTime()
+    );
+
+    const monthly = Object.values(
+      monthlyEarnings as Record<string, IEarningsEntry>
+    ).sort(
+      (a, b) =>
+        new Date(a.month || 0).getTime() - new Date(b.month || 0).getTime()
+    );
+
     return {
-      daily: Object.values(dailyEarnings).sort(
-        (a: any, b: any) =>
-          new Date(a.date).getTime() - new Date(b.date).getTime()
-      ),
-      weekly: Object.values(weeklyEarnings).sort(
-        (a: any, b: any) =>
-          new Date(a.week).getTime() - new Date(b.week).getTime()
-      ),
-      monthly: Object.values(monthlyEarnings).sort(
-        (a: any, b: any) =>
-          new Date(a.month).getTime() - new Date(b.month).getTime()
-      ),
+      daily,
+      weekly,
+      monthly,
       vehicleTypeData,
     };
   }, [earningsData]);
 
-  const currentData = processedData[timeFilter];
+  const currentDataMap: Record<TimeFilter, IEarningsEntry[]> = {
+    daily: processedData.daily,
+    weekly: processedData.weekly,
+    monthly: processedData.monthly,
+  };
+  const currentData = currentDataMap[timeFilter];
   const totalRides = earningsData?.totalRides || 0;
   const totalEarnings = earningsData?.totalEarnings || 0;
   const averageEarningsPerRide =
@@ -184,8 +224,8 @@ export default function EarningsDashboard({
   const growthMetrics = useMemo(() => {
     if (currentData.length < 2) return { earningsGrowth: 0, ridesGrowth: 0 };
 
-    const latest = currentData[currentData.length - 1];
-    const previous = currentData[currentData.length - 2];
+    const latest = currentData[currentData.length - 1] as IEarningsEntry;
+    const previous = currentData[currentData.length - 2] as IEarningsEntry;
 
     const earningsGrowth =
       previous.earnings > 0
@@ -342,14 +382,15 @@ export default function EarningsDashboard({
                 <p className="text-2xl font-bold">
                   ৳
                   {currentData.length > 0
-                    ? currentData[
-                        currentData.length - 1
-                      ]?.earnings?.toLocaleString() || 0
+                    ? (
+                        currentData[currentData.length - 1] as IEarningsEntry
+                      ).earnings?.toLocaleString() || 0
                     : 0}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {currentData.length > 0
-                    ? currentData[currentData.length - 1]?.rides || 0
+                    ? (currentData[currentData.length - 1] as IEarningsEntry)
+                        .rides || 0
                     : 0}{" "}
                   rides
                 </p>
@@ -446,7 +487,9 @@ export default function EarningsDashboard({
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) =>
-                      `${name} ${(percent * 100).toFixed(0)}%`
+                      `${name} ${(((percent ?? 0) as number) * 100).toFixed(
+                        0
+                      )}%`
                     }
                     outerRadius={80}
                     fill="#8884d8"
@@ -555,7 +598,7 @@ export default function EarningsDashboard({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {earningsData?.rides?.slice(0, 5).map((ride, index) => (
+            {earningsData?.rides?.slice(0, 5).map((ride) => (
               <div
                 key={ride._id}
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"

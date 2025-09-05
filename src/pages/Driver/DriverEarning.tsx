@@ -56,7 +56,7 @@ export default function DriverEarning() {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto">
       <EarningsDashboard
         earningsData={
           earningsData || { totalRides: 0, totalEarnings: 0, rides: [] }
