@@ -2,6 +2,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Users, Car, MapPin, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import { useGetPublicStatsQuery } from "@/redux/features/admin/stats.api";
+import type { JSX } from "react";
+
+type CardItem = {
+  title: string;
+  value: string | number;
+  sub?: string;
+  icon: JSX.Element;
+};
 
 export default function PublicStats() {
   const { data, isLoading, isError, refetch } = useGetPublicStatsQuery();
@@ -28,26 +36,27 @@ export default function PublicStats() {
     );
   }
 
-  const cards = [
+  const cards: CardItem[] = [
     {
       title: "Completed Rides",
-      value: data.totalCompletedRides ?? 0,
+      value: Number(data.totalCompletedRides ?? 0),
       icon: <Car className="h-6 w-6 text-primary" />,
     },
     {
       title: "Approved Drivers",
-      value: data.totalApprovedDrivers ?? 0,
+      value: Number(data.totalApprovedDrivers ?? 0),
       icon: <Users className="h-6 w-6 text-primary" />,
     },
     {
       title: "Coverage Locations",
-      value: data.coverageLocationsCount ?? 0,
+      value: Number(data.coverageLocationsCount ?? 0),
       icon: <MapPin className="h-6 w-6 text-primary" />,
     },
     {
       title: "Community Milestone",
       value: `${
-        (data.totalCompletedRides ?? 0) + (data.totalApprovedDrivers ?? 0)
+        Number(data.totalCompletedRides ?? 0) +
+        Number(data.totalApprovedDrivers ?? 0)
       }+`,
       sub: "Rides & Drivers",
       icon: <Award className="h-6 w-6 text-primary" />,

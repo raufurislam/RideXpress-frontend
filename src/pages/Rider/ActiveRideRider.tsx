@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useNavigate, Link } from "react-router";
+import { Link } from "react-router";
 import {
   useCancelRideMutation,
   useGetActiveRideRiderQuery,
@@ -11,7 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
 export default function ActiveRideRider() {
-  const navigate = useNavigate();
   const {
     data: activeRide,
     isFetching,
