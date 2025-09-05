@@ -71,3 +71,39 @@ export interface IDriverProfile {
   approvedAt?: Date;
   earnings: number;
 }
+
+// Driver Earnings Types
+export interface IDriverEarnings {
+  totalRides: number;
+  totalEarnings: number;
+  rides: IDriverEarningRide[];
+}
+
+export interface IDriverEarningRide {
+  _id: string;
+  riderId: string;
+  driverId: string;
+  pickupLocation: {
+    type: string;
+    coordinates: number[];
+    name: string;
+  };
+  destinationLocation: {
+    type: string;
+    coordinates: number[];
+    name: string;
+  };
+  fare: number;
+  distance: number;
+  status: string;
+  vehicleType: string;
+  timestamps: {
+    requestedAt: string;
+    acceptedAt: string;
+    pickedUpAt: string;
+    in_transit: string;
+    completedAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}

@@ -21,6 +21,8 @@ export type {
   VehicleType,
   IUpdateMyDriverProfile,
   IDriverProfile,
+  IDriverEarnings,
+  IDriverEarningRide,
 } from "./driver.type";
 
 export interface IResponse<T> {

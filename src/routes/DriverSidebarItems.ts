@@ -1,9 +1,20 @@
 import ActiveRides from "@/pages/Driver/ActiveRides";
+import DriverEarning from "@/pages/Driver/DriverEarning";
 import DrivingProfile from "@/pages/Driver/DrivingProfile";
 import GetRide from "@/pages/Driver/GetRide";
 import type { ISidebarItem } from "@/types";
 
 export const driverSidebarItems: ISidebarItem[] = [
+  {
+    title: "Dashboard",
+    items: [
+      {
+        title: "My Earning",
+        url: "/driver/earning",
+        component: DriverEarning,
+      },
+    ],
+  },
   {
     title: "History",
     items: [
