@@ -21,6 +21,11 @@ export type {
   VehicleType,
   IUpdateMyDriverProfile,
   IDriverProfile,
+  IDriverEarnings,
+  IDriverEarningRide,
+  IDriverRideHistoryQuery,
+  IDriverRideHistoryMeta,
+  IDriverRideHistoryResponse,
 } from "./driver.type";
 
 export interface IResponse<T> {
@@ -35,6 +40,13 @@ export interface IMeta {
   page: number;
   limit: number;
   total: number;
+}
+
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPage: number;
 }
 
 export interface IResponseWithMeta<T> extends IResponse<T> {

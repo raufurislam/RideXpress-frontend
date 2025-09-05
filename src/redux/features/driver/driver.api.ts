@@ -8,6 +8,9 @@ import type {
   IAvailability,
   IDriverProfile,
   IUpdateMyDriverProfile,
+  IDriverEarnings,
+  IDriverRideHistoryQuery,
+  IDriverRideHistoryResponse,
 } from "@/types";
 
 export const driverApi = baseApi.injectEndpoints({
@@ -69,6 +72,17 @@ export const driverApi = baseApi.injectEndpoints({
       transformResponse: (response: IResponse<IDriverProfile>) => response.data,
     }),
 
+    // Get driver earnings
+    getMyEarningSummaryDriver: builder.query<IDriverEarnings, void>({
+      query: () => ({
+        url: "/ride/earnings",
+        method: "GET",
+      }),
+      providesTags: ["DRIVER"],
+      transformResponse: (response: IResponse<IDriverEarnings>) =>
+        response.data,
+    }),
+
     // PATCH update my profile
     updateMyProfile: builder.mutation<
       IResponse<IDriverProfile>,
@@ -81,6 +95,19 @@ export const driverApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["DRIVER"],
     }),
+
+    // GET Driver ride history
+    getDriverRideHistory: builder.query<
+      IResponse<IDriverRideHistoryResponse>,
+      IDriverRideHistoryQuery
+    >({
+      query: (params: IDriverRideHistoryQuery = {}) => ({
+        url: "/driver/my-ride-history",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["DRIVER"],
+    }),
   }),
 });
 
@@ -91,5 +118,7 @@ export const {
   useGetRequestedRidesQuery,
   useUpdateAvailabilityMutation,
   useGetDriverMyProfileQuery,
+  useGetMyEarningSummaryDriverQuery,
   useUpdateMyProfileMutation,
+  useGetDriverRideHistoryQuery,
 } = driverApi;

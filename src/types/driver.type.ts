@@ -71,3 +71,64 @@ export interface IDriverProfile {
   approvedAt?: Date;
   earnings: number;
 }
+
+// Driver Earnings Types
+export interface IDriverEarnings {
+  totalRides: number;
+  totalEarnings: number;
+  rides: IDriverEarningRide[];
+}
+
+export interface IDriverEarningRide {
+  _id: string;
+  riderId: string;
+  driverId: string;
+  pickupLocation: {
+    type: string;
+    coordinates: number[];
+    name: string;
+  };
+  destinationLocation: {
+    type: string;
+    coordinates: number[];
+    name: string;
+  };
+  fare: number;
+  distance: number;
+  status: string;
+  vehicleType: string;
+  timestamps: {
+    requestedAt: string;
+    acceptedAt: string;
+    pickedUpAt: string;
+    in_transit: string;
+    completedAt: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Driver Ride History Query Parameters
+export interface IDriverRideHistoryQuery {
+  page?: number;
+  limit?: number;
+  status?: string;
+  vehicleType?: string;
+  searchTerm?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+// Driver Ride History Response Meta
+export interface IDriverRideHistoryMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPage: number;
+}
+
+// Driver Ride History Response
+export interface IDriverRideHistoryResponse {
+  data: any[]; // Will be populated rides
+  meta: IDriverRideHistoryMeta;
+}

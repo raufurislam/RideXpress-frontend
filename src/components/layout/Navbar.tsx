@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import Logo from "@/assets/icons/Logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +15,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -29,6 +27,7 @@ import {
 } from "@/components/ui/tooltip";
 import { ModeToggle } from "./ModeToggler";
 import { Link, useLocation } from "react-router";
+import { useEffect, useState } from "react";
 import {
   authApi,
   useLogoutMutation,
@@ -53,6 +52,7 @@ const navigationLinks = [
 ];
 
 export default function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
   const { data } = useUserInfoQuery(undefined);
   const location = useLocation();
   const currentPath = location.pathname;
@@ -75,8 +75,22 @@ export default function Navbar() {
     (auth) => auth.provider === "google"
   );
 
+  // Sticky + scroll-aware background/shadow
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header
+      className={`sticky top-0 z-50 border-b transition-all duration-300 ${
+        scrolled
+          ? "bg-background/80 backdrop-blur-md shadow-sm supports-[backdrop-filter]:bg-background/60"
+          : "bg-transparent backdrop-blur-0"
+      }`}
+    >
       <div className="container mx-auto px-4 flex h-16 items-center justify-between gap-4">
         {/* Left side */}
         <div className="flex items-center gap-2">
@@ -151,7 +165,12 @@ export default function Navbar() {
           {/* Main nav */}
           <div className="flex items-center gap-6">
             <Link to="/" className="text-primary hover:text-primary/90">
-              <Logo />
+              <span className="inline-flex items-center gap-2">
+                <Logo />
+                <span className="hidden sm:inline text-base font-semibold text-foreground">
+                  RideExpress
+                </span>
+              </span>
             </Link>
             {/* Navigation menu */}
             <NavigationMenu className="max-md:hidden">
@@ -189,6 +208,12 @@ export default function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <div className="py-2">
+            <div className="flex items-center gap-2">
+              <ModeToggle />
+            </div>
+          </div>
           {/* User Avatar Dropdown or Login Button */}
           {data?.data?.email ? (
             <TooltipProvider>
@@ -282,13 +307,12 @@ export default function Navbar() {
 
                   <DropdownMenuSeparator />
 
-                  {/* Theme Toggle */}
+                  {/* Quick Actions */}
                   <div className="py-2">
-                    <DropdownMenuLabel className="text-xs font-medium text-muted-foreground mb-2">
-                      Theme
-                    </DropdownMenuLabel>
                     <div className="flex items-center gap-2">
-                      <ModeToggle />
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/settings">Account</Link>
+                      </Button>
                     </div>
                   </div>
 
