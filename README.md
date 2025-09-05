@@ -3,7 +3,7 @@
 <div align="center">
 
 ![RideExpress Logo](https://img.shields.io/badge/RideExpress-Frontend-orange?style=for-the-badge&logo=react)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-green?style=for-the-badge&logo=vercel)](https://rideexpress-frontend.vercel.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Visit%20Site-green?style=for-the-badge&logo=vercel)](https://ride-express.vercel.app)
 
 **A modern, secure ride-sharing platform for companies and universities**
 
@@ -38,7 +38,7 @@
 
 ## 🚀 Live Demo
 
-**🌐 [Visit Live Application](https://rideexpress-frontend.vercel.app)**
+**🌐 [Visit Live Application](https://ride-express.vercel.app)**
 
 Experience the full ride-sharing platform with real-time features, secure authentication, and responsive design.
 
@@ -186,8 +186,8 @@ src/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/rideexpress-frontend.git
-cd rideexpress-frontend
+git clone https://github.com/raufurislam/RideXpress-frontend.git
+cd RideXpress-frontend
 ```
 
 ### 2. Install Dependencies
@@ -446,7 +446,7 @@ We welcome contributions! Please follow these steps:
 ### **1. Fork the Repository**
 
 ```bash
-git fork https://github.com/your-username/rideexpress-frontend.git
+git fork https://github.com/raufurislam/RideXpress-frontend.git
 ```
 
 ### **2. Create a Feature Branch**
@@ -508,8 +508,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Made with ❤️ by the RideExpress Team**
 
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=flat-square&logo=github)](https://github.com/your-username/rideexpress-frontend)
-[![Issues](https://img.shields.io/badge/Issues-Report%20Bug-red?style=flat-square&logo=github)](https://github.com/your-username/rideexpress-frontend/issues)
-[![Discussions](https://img.shields.io/badge/Discussions-Ask%20Question-blue?style=flat-square&logo=github)](https://github.com/your-username/rideexpress-frontend/discussions)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=flat-square&logo=github)](https://github.com/raufurislam/RideXpress-frontend)
+[![Issues](https://img.shields.io/badge/Issues-Report%20Bug-red?style=flat-square&logo=github)](https://github.com/raufurislam/RideXpress-frontend/issues)
+[![Discussions](https://img.shields.io/badge/Discussions-Ask%20Question-blue?style=flat-square&logo=github)](https://github.com/raufurislam/RideXpress-frontend/discussions)
 
 </div>
