@@ -2,6 +2,8 @@ import HeroSection from "@/components/modules/homepage/HeroSection";
 import HowItWorks from "@/components/modules/homepage/HowItWorks";
 import PublicStats from "@/components/modules/homepage/PublicStats";
 import ServiceHighlights from "@/components/modules/homepage/ServiceHighlights";
+import Testimonials from "@/components/modules/homepage/Testimonials";
+import AppPromo from "@/components/modules/homepage/AppPromo";
 
 export default function Homepage() {
   return (
@@ -10,6 +12,8 @@ export default function Homepage() {
       <PublicStats />
       <ServiceHighlights />
       <HowItWorks />
+      <Testimonials />
+      <AppPromo />
       {/* Scroll Indicator
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60">
         <div className="animate-bounce">
