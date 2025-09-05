@@ -9,6 +9,7 @@ import {
   useUpdateMyProfileMutation,
 } from "@/redux/features/driver/driver.api";
 import { useUpdateRideStatusMutation } from "@/redux/features/ride/ride.api";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
 import {
   MapPin,
   Car,
@@ -119,6 +120,7 @@ export default function ActiveRides() {
   const [updateMyProfile] = useUpdateMyProfileMutation();
   const { data: driverProfile, refetch: refetchDriver } =
     useGetDriverMyProfileQuery();
+  const { data: me } = useUserInfoQuery();
 
   // Filter rides to show only active ones (not REQUESTED or REJECTED)
   // const activeRides = useMemo(() => {
@@ -131,7 +133,9 @@ export default function ActiveRides() {
   // }, [allRides]);
 
   const activeRides = useMemo(() => {
+    const userId = me?.data?._id;
     return allRides
+      .filter((ride) => ride.driverId === userId)
       .filter(
         (ride) =>
           ride.status !== "REQUESTED" &&
@@ -139,20 +143,15 @@ export default function ActiveRides() {
           ride.status !== "CANCELLED"
       )
       .sort((a, b) => {
-        // 🚨 Incomplete rides first (not COMPLETED)
         if (a.status !== "COMPLETED" && b.status === "COMPLETED") return -1;
         if (a.status === "COMPLETED" && b.status !== "COMPLETED") return 1;
-
-        // ✅ Among incomplete, prioritize ACCEPTED rides
         if (a.status === "ACCEPTED" && b.status !== "ACCEPTED") return -1;
         if (b.status === "ACCEPTED" && a.status !== "ACCEPTED") return 1;
-
-        // ✅ Then sort by latest createdAt
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       });
-  }, [allRides]);
+  }, [allRides, me?.data?._id]);
 
   // Check if driver has any active rides
   const hasActiveRides = activeRides.length > 0;
