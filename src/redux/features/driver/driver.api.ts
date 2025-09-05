@@ -93,6 +93,15 @@ export const driverApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["DRIVER"],
     }),
+
+    // GET Driver ride history
+    getDriverRideHistory: builder.query({
+      query: () => ({
+        url: "/driver/my-ride-history",
+        method: "GET",
+      }),
+      providesTags: ["DRIVER"],
+    }),
   }),
 });
 
@@ -105,4 +114,5 @@ export const {
   useGetDriverMyProfileQuery,
   useGetMyEarningSummaryDriverQuery,
   useUpdateMyProfileMutation,
+  useGetDriverRideHistoryQuery,
 } = driverApi;

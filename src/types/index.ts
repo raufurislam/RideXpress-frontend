@@ -39,6 +39,13 @@ export interface IMeta {
   total: number;
 }
 
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPage: number;
+}
+
 export interface IResponseWithMeta<T> extends IResponse<T> {
   meta: IMeta;
 }
