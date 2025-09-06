@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -8,6 +9,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  MdAdminPanelSettings,
+  MdOutlineAdminPanelSettings,
+} from "react-icons/md";
 import { Input } from "@/components/ui/input";
 import Password from "@/components/ui/Password";
 import config from "@/config";
@@ -18,6 +23,8 @@ import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
+import { Bike } from "lucide-react";
+import { FaRegUserCircle } from "react-icons/fa";
 
 export function LoginForm({
   className,
@@ -34,21 +41,28 @@ export function LoginForm({
 
   //     if (res.success) {
   //       toast.success("Logged in successfully");
-
-  //       navigate("/");
+  //       navigate("/"); // normal dashboard
   //     }
   //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   //   } catch (err: any) {
   //     console.error(err);
 
-  //     if (err.data.message === "Password does not match") {
-  //       toast.error("Invalid credential");
+  //     // Check the backend message for suspended/blocked users
+  //     const msg = err?.data?.message || "";
+
+  //     if (msg.includes("SUSPENDED") || msg.includes("BLOCKED")) {
+  //       toast.error(`Your account is ${msg.replace("User is ", "")}`);
+  //       return navigate("/account-status", {
+  //         state: { status: msg.replace("User is ", "") },
+  //       });
   //     }
 
-  //     // if (err.data.message === "User is not verified") {
-  //     //   toast.error("Your account is not verified");
-  //     //   navigate("/verify", { state: data.email });
-  //     // }
+  //     if (msg === "Password does not match") {
+  //       toast.error("Invalid credential");
+  //     } else if (msg === "User is not verified") {
+  //       toast.error("Your account is not verified");
+  //       navigate("/verify", { state: data.email });
+  //     }
   //   }
   // };
 
@@ -61,7 +75,6 @@ export function LoginForm({
         toast.success("Logged in successfully");
         navigate("/"); // normal dashboard
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error(err);
 
@@ -80,48 +93,38 @@ export function LoginForm({
       } else if (msg === "User is not verified") {
         toast.error("Your account is not verified");
         navigate("/verify", { state: data.email });
+      } else {
+        // ✅ fallback toast for any unhandled error
+        toast.error(msg || "Something went wrong. Please try again.");
       }
     }
   };
 
-  // const onSubmit = async (data: ILogin) => {
-  //   try {
-  //     const res = await login(data).unwrap();
-  //     console.log(res);
+  const handleDemoLogin = async (
+    role: "super" | "admin" | "rider" | "driver"
+  ) => {
+    let credentials: ILogin;
 
-  //     if (res.success) {
-  //       toast.success("Logged in successfully");
+    switch (role) {
+      case "super":
+        credentials = { email: "super@gmail.com", password: "753951Bd@" };
+        break;
+      case "admin":
+        credentials = { email: "admin@gmail.com", password: "753951Bd@" };
+        break;
+      case "rider":
+        credentials = { email: "rider1@gmail.com", password: "753951Bd@" };
+        break;
+      case "driver":
+        credentials = { email: "driver1@gmail.com", password: "753951Bd@" };
+        break;
+      default:
+        return;
+    }
 
-  //       // Check user status from response
-  //       const status = res.data?.isActive || "ACTIVE";
-  //       if (status === "SUSPENDED" || status === "BLOCKED") {
-  //         toast.error(`Your account is ${status}`);
-  //         return navigate("/account-status", { state: { status } });
-  //       }
-
-  //       navigate("/"); // normal dashboard
-  //     }
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   } catch (err: any) {
-  //     console.error(err);
-
-  //     const msg = err?.data?.message || "";
-
-  //     // Handle suspended/blocked
-  //     if (msg.includes("SUSPENDED") || msg.includes("BLOCKED")) {
-  //       const status = msg.replace("User is ", "") || "UNKNOWN";
-  //       toast.error(`Your account is ${status}`);
-  //       return navigate("/account-status", { state: { status } });
-  //     }
-
-  //     if (msg === "Password does not match") {
-  //       toast.error("Invalid credential");
-  //     } else if (msg === "User is not verified") {
-  //       toast.error("Your account is not verified");
-  //       navigate("/verify", { state: data.email });
-  //     }
-  //   }
-  // };
+    // call your existing login mutation
+    await onSubmit(credentials);
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -200,6 +203,55 @@ export function LoginForm({
           Login with Google
         </Button>
       </div>
+
+      <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
+        <span className="relative z-10 bg-background px-2 text-muted-foreground">
+          Or continue with Demo Credentials
+        </span>
+      </div>
+
+      <div>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full cursor-pointer"
+          onClick={() => handleDemoLogin("super")}
+        >
+          <MdAdminPanelSettings />
+          Login with Super Admin
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full cursor-pointer mt-2"
+          onClick={() => handleDemoLogin("admin")}
+        >
+          <MdOutlineAdminPanelSettings />
+          Login with Admin
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full cursor-pointer mt-2"
+          onClick={() => handleDemoLogin("rider")}
+        >
+          <FaRegUserCircle />
+          Login with Rider
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full cursor-pointer mt-2"
+          onClick={() => handleDemoLogin("driver")}
+        >
+          <Bike />
+          Login with Driver
+        </Button>
+      </div>
+
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
         <Link to="/register" replace className="underline underline-offset-4">
