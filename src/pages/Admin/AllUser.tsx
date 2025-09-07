@@ -143,30 +143,30 @@ export default function AllUser() {
 
   // Client-side sorting (mirrors AllDriver behavior; server-side also supported via params)
   const sortedUsers = useMemo(() => {
-    console.log('sortedUsers recalculating:', {
+    console.log("sortedUsers recalculating:", {
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
       filteredUsersLength: filteredUsers.length,
-      hasSortBy: !!filters.sortBy
+      hasSortBy: !!filters.sortBy,
     });
-    
+
     if (!filters.sortBy) return filteredUsers;
-    
+
     const sortKey = filters.sortBy as keyof IUser;
     const direction = filters.sortOrder === "asc" ? 1 : -1;
-    
+
     // Create a copy to avoid mutating the original array
     const copy = [...filteredUsers];
-    
+
     copy.sort((a, b) => {
       const aVal = a[sortKey];
       const bVal = b[sortKey];
-      
+
       // Handle null/undefined values
       if (aVal == null && bVal == null) return 0;
       if (aVal == null) return 1 * direction;
       if (bVal == null) return -1 * direction;
-      
+
       // Handle date sorting
       if (sortKey === "createdAt") {
         const aNum = new Date(aVal as string).getTime();
@@ -175,17 +175,17 @@ export default function AllUser() {
         if (aNum > bNum) return 1 * direction;
         return 0;
       }
-      
+
       // Handle string sorting
       const aStr = String(aVal).toLowerCase();
       const bStr = String(bVal).toLowerCase();
-      
+
       if (aStr < bStr) return -1 * direction;
       if (aStr > bStr) return 1 * direction;
       return 0;
     });
-    
-    console.log('Sorting completed. Result length:', copy.length);
+
+    console.log("Sorting completed. Result length:", copy.length);
     return copy;
   }, [filteredUsers, filters.sortBy, filters.sortOrder]);
 
