@@ -112,7 +112,7 @@ export default function HowItWorks() {
   };
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24">
+    <section className="py-8">
       <div className="container mx-auto px-6">
         <div className="text-center mb-10 sm:mb-12 lg:mb-14">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background">

@@ -67,7 +67,7 @@ export default function HeroSection() {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 py-8  md:py-8 lg:grid-cols-2">
+        <div className="grid items-center gap-10 p-8 pb-28 lg:grid-cols-2">
           <div className="flex flex-col gap-6 text-center lg:text-left">
             <div className="flex justify-center lg:justify-start">
               <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background dark:border-input">

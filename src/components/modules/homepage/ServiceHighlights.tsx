@@ -44,7 +44,7 @@ const features = [
 
 export default function ServiceHighlights() {
   return (
-    <section className="py-12 sm:py-16 lg:py-24">
+    <section className="py-8">
       <div className="container mx-auto px-6">
         <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12 lg:mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background">

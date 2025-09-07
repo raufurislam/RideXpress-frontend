@@ -75,29 +75,73 @@ export default function AppPromo() {
   };
 
   return (
+    // <section className="py-12 sm:py-16 lg:py-24 bg-muted/30">
+    //   <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-center">
+    //     <div>
+    //       <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background">
+    //         <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+    //         <span>Start in your browser</span>
+    //       </div>
+    //       <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mt-3">
+    //         Book rides effortlessly online
+    //       </h2>
+    //       <p className="mt-3 text-muted-foreground max-w-prose">
+    //         Plan trips, confirm fares, and track your ride from the web. No app
+    //         needed.
+    //       </p>
+    //       {renderCTA()}
+    //       <ul className="mt-6 grid grid-cols-2 gap-3 text-sm">
+    //         <li className="text-muted-foreground">• One-tap web booking</li>
+    //         <li className="text-muted-foreground">• Live driver tracking</li>
+    //         <li className="text-muted-foreground">• Transparent pricing</li>
+    //         <li className="text-muted-foreground">• 24/7 support</li>
+    //       </ul>
+    //     </div>
+    //     <div className="relative">
+    //       <img
+    //         src={mobileImg}
+    //         alt="Ride booking preview"
+    //         className="rounded-xl shadow-xl w-full object-cover"
+    //       />
+    //       <div className="absolute -bottom-4 -right-4 bg-primary text-primary-foreground px-4 py-2 rounded-full shadow-md">
+    //         Fast & Secure
+    //       </div>
+    //     </div>
+    //   </div>
+    // </section>
+
     <section className="py-12 sm:py-16 lg:py-24 bg-muted/30">
       <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-center">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background">
+        <div className="text-center md:text-left">
+          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background mx-auto md:mx-0">
             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
             <span>Start in your browser</span>
           </div>
+
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight mt-3">
             Book rides effortlessly online
           </h2>
-          <p className="mt-3 text-muted-foreground max-w-prose">
+
+          <p className="mt-3 text-muted-foreground max-w-prose mx-auto md:mx-0">
             Plan trips, confirm fares, and track your ride from the web. No app
             needed.
           </p>
-          {renderCTA()}
-          <ul className="mt-6 grid grid-cols-2 gap-3 text-sm">
+
+          <div className="flex justify-center md:justify-start">
+            {renderCTA()}
+          </div>
+
+          {/* Feature list */}
+          <ul className="mt-6 grid grid-cols-2 gap-3 text-sm justify-center md:justify-start">
             <li className="text-muted-foreground">• One-tap web booking</li>
             <li className="text-muted-foreground">• Live driver tracking</li>
             <li className="text-muted-foreground">• Transparent pricing</li>
             <li className="text-muted-foreground">• 24/7 support</li>
           </ul>
         </div>
-        <div className="relative">
+
+        {/* Image section */}
+        <div className="relative mt-8 md:mt-0">
           <img
             src={mobileImg}
             alt="Ride booking preview"

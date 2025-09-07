@@ -85,6 +85,11 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const publicLinks = navigationLinks.filter((l) => l.role === "PUBLIC");
+  const privateLinks = navigationLinks.filter(
+    (l) => l.role !== "PUBLIC" && l.role === data?.data?.role
+  );
+
   return (
     <header
       className={`sticky top-0 z-50 border-b transition-all duration-300 ${
@@ -93,14 +98,14 @@ export default function Navbar() {
           : "bg-transparent backdrop-blur-0"
       }`}
     >
-      <div className="container mx-auto px-4 flex h-16 items-center justify-between gap-4">
+      <div className="container mx-auto px-4 flex h-16 items-center justify-between gap-4 relative">
         {/* Left side */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           {/* Mobile menu trigger */}
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                className="group size-8 md:hidden"
+                className="group size-8 lg:hidden"
                 variant="ghost"
                 size="icon"
               >
@@ -131,7 +136,7 @@ export default function Navbar() {
                 </svg>
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="start" className="w-36 p-1 md:hidden">
+            <PopoverContent align="start" className="w-36 p-1 lg:hidden">
               <NavigationMenu className="max-w-none *:w-full">
                 <NavigationMenuList className="flex-col items-start gap-0 md:gap-2">
                   {navigationLinks
@@ -164,49 +169,71 @@ export default function Navbar() {
             </PopoverContent>
           </Popover>
 
-          {/* Main nav */}
-          <div className="flex items-center gap-6">
-            <Link to="/" className="text-primary hover:text-primary/90">
-              <span className="inline-flex items-center gap-2">
-                {/* <Logo /> */}
-                <Logo size={50} />
-                <span className="hidden sm:inline text-base font-semibold text-foreground">
-                  RideExpress
-                </span>
+          {/* Logo */}
+          <Link to="/" className="text-primary hover:text-primary/90">
+            <span className="inline-flex items-center gap-2">
+              {/* <Logo /> */}
+              <Logo size={50} />
+              <span className="hidden sm:inline text-base font-semibold text-foreground">
+                RideExpress
               </span>
-            </Link>
-            {/* Navigation menu */}
+            </span>
+          </Link>
+
+          {/* Role-based desktop nav (left-aligned) */}
+          {privateLinks.length > 0 ? (
             <NavigationMenu className="max-md:hidden">
               <NavigationMenuList className="gap-2">
-                {navigationLinks
-                  .filter(
-                    (link) =>
-                      link.role === "PUBLIC" || link.role === data?.data?.role
-                  )
-                  .map((link) => (
-                    <NavigationMenuItem key={`${link.href}-${link.role}`}>
-                      <NavigationMenuLink
-                        asChild
-                        className="py-1.5 font-medium transition-colors"
-                      >
-                        <Link
-                          to={link.href}
-                          className={`relative 
+                {privateLinks.map((link) => (
+                  <NavigationMenuItem key={`${link.href}-${link.role}`}>
+                    <NavigationMenuLink
+                      asChild
+                      className="py-1.5 font-medium transition-colors"
+                    >
+                      <Link
+                        to={link.href}
+                        className={`relative 
       ${
         currentPath === link.href
           ? "text-foreground font-semibold after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:bg-primary"
           : "text-muted-foreground hover:text-primary"
       }
     `}
-                        >
-                          {link.label}
-                        </Link>
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  ))}
+                      >
+                        {link.label}
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                ))}
               </NavigationMenuList>
             </NavigationMenu>
-          </div>
+          ) : null}
+        </div>
+
+        {/* Centered PUBLIC nav on large screens */}
+        <div className="hidden lg:block absolute left-1/2 -translate-x-1/2">
+          <NavigationMenu>
+            <NavigationMenuList className="gap-4">
+              {publicLinks.map((link) => (
+                <NavigationMenuItem key={link.href}>
+                  <NavigationMenuLink asChild className="py-1.5 font-medium">
+                    <Link
+                      to={link.href}
+                      className={`relative 
+      ${
+        currentPath === link.href
+          ? "text-foreground font-semibold after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:bg-primary"
+          : "text-muted-foreground hover:text-primary"
+      }
+    `}
+                    >
+                      {link.label}
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
         {/* Right side */}

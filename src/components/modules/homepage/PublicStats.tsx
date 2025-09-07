@@ -103,7 +103,7 @@ export default function PublicStats() {
   }
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 px-4 container mx-auto">
+    <section className="pb-8 sm:pb-8 lg:pb-8 px-4 container mx-auto">
       <div className="text-center mb-10 sm:mb-12 lg:mb-14">
         <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background">
           <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
