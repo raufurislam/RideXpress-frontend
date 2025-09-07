@@ -59,7 +59,8 @@ export default function Footer() {
         <div className="grid gap-10 lg:grid-cols-3 lg:gap-16">
           <div>
             <div className="flex items-center gap-3">
-              <Logo />
+              {/* <Logo /> */}
+              <Logo size={60} />
               <p className="text-foreground font-medium">Ride Express</p>
             </div>
             <p className="mt-4 max-w-sm text-muted-foreground">

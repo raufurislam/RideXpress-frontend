@@ -168,7 +168,8 @@ export default function Navbar() {
           <div className="flex items-center gap-6">
             <Link to="/" className="text-primary hover:text-primary/90">
               <span className="inline-flex items-center gap-2">
-                <Logo />
+                {/* <Logo /> */}
+                <Logo size={50} />
                 <span className="hidden sm:inline text-base font-semibold text-foreground">
                   RideExpress
                 </span>
