@@ -1,98 +1,123 @@
 import { Button } from "@/components/ui/button";
-import mapLineImg from "@/assets/images/mapLineImg.png";
+import { role } from "@/constants/role";
+import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
+import { useNavigate } from "react-router";
 
-type Props = {
-  /** If provided, uses this many pixels for margin-top */
-  topOffsetPx?: number;
-  /** If provided, uses this many vh (viewport height) for margin-top — takes precedence over px */
-  topOffsetVh?: number;
-};
+export default function HeroSection() {
+  const navigate = useNavigate();
+  const { data } = useUserInfoQuery(undefined);
+  const user = data?.data;
+  const userRole = user?.role;
 
-export default function HeroSection({ topOffsetPx, topOffsetVh }: Props) {
-  // If topOffsetVh provided use vh, else if px provided use px, else fall back to responsive tailwind mt classes
-  const style = topOffsetVh
-    ? { marginTop: `${topOffsetVh}vh` }
-    : topOffsetPx
-    ? { marginTop: `${topOffsetPx}px` }
-    : undefined;
+  const handlePrimaryAction = () => {
+    if (!userRole) {
+      navigate("/login");
+      return;
+    }
+    if (userRole === role.rider) {
+      navigate("/rider/request-ride");
+      return;
+    }
+    if (userRole === role.driver) {
+      navigate("/driver/get-ride");
+      return;
+    }
+    if (userRole === role.admin || userRole === role.superAdmin) {
+      navigate("/admin/analytics");
+      return;
+    }
+  };
+
+  const primaryCtaLabel = !userRole
+    ? "Join RideExpress"
+    : userRole === role.rider
+    ? "Book a ride"
+    : userRole === role.driver
+    ? "Get rides"
+    : "Go to dashboard";
+
+  const secondaryAction = () => {
+    if (!userRole) {
+      navigate("/register");
+      return;
+    }
+    if (userRole === role.rider) {
+      navigate("/rider/ride-history");
+      return;
+    }
+    if (userRole === role.driver) {
+      navigate("/driver/active-ride");
+      return;
+    }
+    if (userRole === role.admin || userRole === role.superAdmin) {
+      navigate("/admin/all-rides");
+      return;
+    }
+  };
+
+  const secondaryCtaLabel = !userRole
+    ? "Create an account"
+    : userRole === role.rider
+    ? "View ride history"
+    : userRole === role.driver
+    ? "View active rides"
+    : "View all rides";
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-background">
-      {/* -------------------
-          MOBILE VERSION (sm and below)
-          ------------------- */}
-      <div className="md:hidden relative flex flex-col items-center justify-center min-h-screen text-center px-6">
-        {/* Background Image - Mobile optimized */}
-        <img
-          src={mapLineImg}
-          alt="Map background"
-          className="absolute inset-0 w-full h-full object-cover object-center"
-        />
+    <section className="relative overflow-hidden">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid items-center gap-10 py-8  md:py-8 lg:grid-cols-2">
+          <div className="flex flex-col gap-6 text-center lg:text-left">
+            <div className="inline-flex items-center justify-center gap-2 rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground lg:self-start dark:border-input">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              Smarter, safer city rides
+            </div>
 
-        {/* Gradient overlay for better readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
+            <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
+              Move freely across the city with confidence
+            </h1>
+            <p className="text-balance text-base text-muted-foreground sm:text-lg">
+              RideExpress connects riders and drivers with real-time matching,
+              transparent pricing, and a delightful experience tailored for both
+              light and dark mode.
+            </p>
 
-        {/* Hero Content */}
-        <div className="relative z-10 flex flex-col items-center text-center">
-          {/* Decorative accent */}
-          <div className="w-12 h-1 bg-gradient-to-r from-orange-500 to-orange-400 rounded-full mb-4" />
+            <div className="flex flex-wrap items-center justify-center gap-3 lg:justify-start">
+              <Button size="lg" onClick={handlePrimaryAction}>
+                {primaryCtaLabel}
+              </Button>
+              <Button size="lg" variant="outline" onClick={secondaryAction}>
+                {secondaryCtaLabel}
+              </Button>
+            </div>
 
-          <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
-            Share the Ride
-          </h1>
+            {!userRole && (
+              <p className="text-xs text-muted-foreground">
+                By continuing, you agree to our Terms and Privacy Policy.
+              </p>
+            )}
+          </div>
 
-          <p className="text-base text-muted-foreground max-w-sm mb-8 leading-relaxed">
-            Experience the future of urban mobility with our secure ride-sharing
-            platform for companies and universities. Connect, travel, and save
-            together.
-          </p>
+          <div className="relative">
+            <div className="absolute -inset-8 -z-10 rounded-3xl bg-gradient-to-tr from-primary/10 via-transparent to-transparent blur-2xl dark:from-primary/20" />
+            <div className="aspect-[5/4] w-full overflow-hidden rounded-2xl border bg-muted/30 shadow-sm dark:border-input">
+              <img
+                src="/src/assets/images/mobile-app-location-digital-art.jpg"
+                alt="RideExpress app preview"
+                className="size-full object-cover"
+                loading="eager"
+              />
+            </div>
 
-          <Button
-            size="lg"
-            className="bg-primary text-white px-8 py-3 rounded-full shadow-lg hover:scale-105 transition-transform font-semibold"
-          >
-            Book Ride
-          </Button>
-        </div>
-      </div>
-
-      {/* -------------------
-          TABLET & DESKTOP (md and above) - Your Original Design
-          ------------------- */}
-      <div className="hidden md:flex items-start justify-center min-h-screen text-center relative">
-        {/* Background Image - Original positioning */}
-        <img
-          src={mapLineImg}
-          alt="Map Line Background"
-          className="absolute bottom-0 left-0 w-full h-auto object-cover pointer-events-none"
-        />
-
-        {/* Gradient overlay (keep behind content) */}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent pointer-events-none" />
-
-        {/* Content: if no explicit style, we apply responsive mt classes */}
-        <div
-          style={style}
-          className={`relative z-10 px-6 lg:px-8 ${
-            style ? "" : "mt-24 lg:mt-32"
-          }`}
-        >
-          <h1 className="text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-4">
-            Share the Ride
-          </h1>
-
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Experience the future of urban mobility with our secure ride-sharing
-            platform for companies and universities. Connect, travel, and save
-            together.
-          </p>
-
-          <Button
-            size="lg"
-            className="bg-primary text-white px-8 py-3 rounded-full shadow-lg hover:scale-105 transition"
-          >
-            Book Ride
-          </Button>
+            <div className="pointer-events-none absolute -bottom-6 right-6 hidden rounded-xl border bg-background/70 px-4 py-3 text-sm shadow-sm backdrop-blur md:block dark:border-input">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex size-2 rounded-full bg-emerald-500" />
+                <span className="text-muted-foreground">
+                  Live drivers nearby
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

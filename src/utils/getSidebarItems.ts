@@ -10,7 +10,7 @@ export const getSidebarItems = (userRole?: TRole) => {
   // console.log(userRole);
   switch (userRole) {
     case role.superAdmin:
-      return [...adminSidebarItems, ...riderSidebarItems];
+      return [...adminSidebarItems];
     case role.admin:
       return [...adminSidebarItems];
     case role.rider:

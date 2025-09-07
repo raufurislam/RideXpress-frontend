@@ -110,7 +110,7 @@ export function LoginForm({
         credentials = { email: "super@gmail.com", password: "753951Bd@" };
         break;
       case "admin":
-        credentials = { email: "admin@gmail.com", password: "753951Bd@" };
+        credentials = { email: "admin1@gmail.com", password: "753951Bd@" };
         break;
       case "rider":
         credentials = { email: "rider1@gmail.com", password: "753951Bd@" };
