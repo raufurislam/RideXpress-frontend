@@ -5,6 +5,7 @@ import type {
   IDriver,
   DriverStatus,
   IResponseWithMeta,
+  IRide,
 } from "@/types";
 
 export const adminApi = baseApi.injectEndpoints({
@@ -68,8 +69,20 @@ export const adminApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["DRIVER"],
     }),
+
+    getAllRide: builder.query<IRide[], void>({
+      query: () => ({
+        url: "/ride",
+        method: "GET",
+      }),
+      providesTags: ["RIDE"],
+      transformResponse: (response: IResponse<IRide[]>) => response.data,
+    }),
   }),
 });
 
-export const { useGetAllDriversQuery, useUpdateDriverStatusMutation } =
-  adminApi;
+export const {
+  useGetAllDriversQuery,
+  useUpdateDriverStatusMutation,
+  useGetAllRideQuery,
+} = adminApi;

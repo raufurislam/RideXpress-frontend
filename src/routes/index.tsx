@@ -51,6 +51,10 @@ export const router = createBrowserRouter([
         Component: withAuth(Profile),
         path: "/profile",
       },
+      {
+        Component: withAuth(Settings),
+        path: "/settings",
+      },
     ],
   },
 
@@ -96,11 +100,6 @@ export const router = createBrowserRouter([
   {
     Component: Register,
     path: "/register",
-  },
-
-  {
-    Component: withAuth(Settings),
-    path: "/settings",
   },
   {
     Component: Unauthorized,

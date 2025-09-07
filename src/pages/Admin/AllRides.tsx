@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { type IRide } from "@/types";
 import { formatDate } from "@/lib/utils";
+import { useGetAllRideQuery } from "@/redux/features/admin/admin.api";
 
 // Mock data for now - replace with actual API call
 const mockRides: IRide[] = [
@@ -104,6 +105,237 @@ const mockRides: IRide[] = [
     createdAt: "2024-01-15T12:00:00Z",
     updatedAt: "2024-01-15T12:00:00Z",
   },
+  {
+    _id: "4",
+    riderId: "rider1",
+    driverId: "driver1",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Central Park, New York",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Times Square, New York",
+    },
+    fare: 25.5,
+    distance: 2.5,
+    status: "COMPLETED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T10:00:00Z"),
+      acceptedAt: new Date("2024-01-15T10:05:00Z"),
+      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
+      completedAt: new Date("2024-01-15T10:35:00Z"),
+    },
+    createdAt: "2024-01-15T10:00:00Z",
+    updatedAt: "2024-01-15T10:35:00Z",
+  },
+  {
+    _id: "5",
+    riderId: "rider2",
+    driverId: "driver2",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Brooklyn Bridge, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Empire State Building, NY",
+    },
+    fare: 18.75,
+    distance: 1.8,
+    status: "IN_TRANSIT",
+    vehicleType: "BIKE",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T11:00:00Z"),
+      acceptedAt: new Date("2024-01-15T11:03:00Z"),
+      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
+    },
+    createdAt: "2024-01-15T11:00:00Z",
+    updatedAt: "2024-01-15T11:10:00Z",
+  },
+  {
+    _id: "6",
+    riderId: "rider3",
+    driverId: "driver3",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Statue of Liberty, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Wall Street, NY",
+    },
+    fare: 32.0,
+    distance: 3.2,
+    status: "REQUESTED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T12:00:00Z"),
+    },
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z",
+  },
+  {
+    _id: "7",
+    riderId: "rider1",
+    driverId: "driver1",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Central Park, New York",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Times Square, New York",
+    },
+    fare: 25.5,
+    distance: 2.5,
+    status: "COMPLETED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T10:00:00Z"),
+      acceptedAt: new Date("2024-01-15T10:05:00Z"),
+      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
+      completedAt: new Date("2024-01-15T10:35:00Z"),
+    },
+    createdAt: "2024-01-15T10:00:00Z",
+    updatedAt: "2024-01-15T10:35:00Z",
+  },
+  {
+    _id: "8",
+    riderId: "rider2",
+    driverId: "driver2",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Brooklyn Bridge, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Empire State Building, NY",
+    },
+    fare: 18.75,
+    distance: 1.8,
+    status: "IN_TRANSIT",
+    vehicleType: "BIKE",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T11:00:00Z"),
+      acceptedAt: new Date("2024-01-15T11:03:00Z"),
+      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
+    },
+    createdAt: "2024-01-15T11:00:00Z",
+    updatedAt: "2024-01-15T11:10:00Z",
+  },
+  {
+    _id: "9",
+    riderId: "rider3",
+    driverId: "driver3",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Statue of Liberty, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Wall Street, NY",
+    },
+    fare: 32.0,
+    distance: 3.2,
+    status: "REQUESTED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T12:00:00Z"),
+    },
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z",
+  },
+  {
+    _id: "10",
+    riderId: "rider1",
+    driverId: "driver1",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Central Park, New York",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Times Square, New York",
+    },
+    fare: 25.5,
+    distance: 2.5,
+    status: "COMPLETED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T10:00:00Z"),
+      acceptedAt: new Date("2024-01-15T10:05:00Z"),
+      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
+      completedAt: new Date("2024-01-15T10:35:00Z"),
+    },
+    createdAt: "2024-01-15T10:00:00Z",
+    updatedAt: "2024-01-15T10:35:00Z",
+  },
+  {
+    _id: "11",
+    riderId: "rider2",
+    driverId: "driver2",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Brooklyn Bridge, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Empire State Building, NY",
+    },
+    fare: 18.75,
+    distance: 1.8,
+    status: "IN_TRANSIT",
+    vehicleType: "BIKE",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T11:00:00Z"),
+      acceptedAt: new Date("2024-01-15T11:03:00Z"),
+      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
+    },
+    createdAt: "2024-01-15T11:00:00Z",
+    updatedAt: "2024-01-15T11:10:00Z",
+  },
+  {
+    _id: "12",
+    riderId: "rider3",
+    driverId: "driver3",
+    pickupLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Statue of Liberty, NY",
+    },
+    destinationLocation: {
+      type: "Point",
+      coordinates: [0, 0],
+      name: "Wall Street, NY",
+    },
+    fare: 32.0,
+    distance: 3.2,
+    status: "REQUESTED",
+    vehicleType: "CAR",
+    timestamps: {
+      requestedAt: new Date("2024-01-15T12:00:00Z"),
+    },
+    createdAt: "2024-01-15T12:00:00Z",
+    updatedAt: "2024-01-15T12:00:00Z",
+  },
 ];
 
 const statusConfig = {
@@ -151,6 +383,15 @@ const vehicleTypeConfig = {
 };
 
 export default function AllRides() {
+  const {
+    data: allRides = [],
+    // isLoading,
+    // error,
+    // refetch,
+  } = useGetAllRideQuery();
+
+  console.log(allRides);
+
   const [filters, setFilters] = useState<{
     search: string;
     status: string | "all";
