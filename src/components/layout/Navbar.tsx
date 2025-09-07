@@ -181,7 +181,7 @@ export default function Navbar() {
           </Link>
 
           {/* Role-based desktop nav (left-aligned) */}
-          {privateLinks.length > 0 ? (
+          {/* {privateLinks.length > 0 ? (
             <NavigationMenu className="max-md:hidden">
               <NavigationMenuList className="gap-2">
                 {privateLinks.map((link) => (
@@ -207,10 +207,9 @@ export default function Navbar() {
                 ))}
               </NavigationMenuList>
             </NavigationMenu>
-          ) : null}
+          ) : null} */}
         </div>
-
-        {/* Centered PUBLIC nav on large screens */}
+        {/* Centered PUBLIC nav on large screens
         <div className="hidden lg:block absolute left-1/2 -translate-x-1/2">
           <NavigationMenu>
             <NavigationMenuList className="gap-4">
@@ -234,7 +233,35 @@ export default function Navbar() {
               ))}
             </NavigationMenuList>
           </NavigationMenu>
-        </div>
+        </div> */}
+
+        {/* Centered nav (public + private links together) */}
+        <NavigationMenu className="hidden lg:block">
+          <NavigationMenuList className="gap-2">
+            {[...publicLinks, ...privateLinks].map((link) => (
+              <NavigationMenuItem
+                key={`${link.href}-${link.role || link.label}`}
+              >
+                <NavigationMenuLink
+                  asChild
+                  className="py-1.5 font-medium transition-colors"
+                >
+                  <Link
+                    to={link.href}
+                    className={`relative 
+              ${
+                currentPath === link.href
+                  ? "text-foreground font-semibold after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:bg-primary"
+                  : "text-muted-foreground hover:text-primary"
+              }`}
+                  >
+                    {link.label}
+                  </Link>
+                </NavigationMenuLink>
+              </NavigationMenuItem>
+            ))}
+          </NavigationMenuList>
+        </NavigationMenu>
 
         {/* Right side */}
         <div className="flex items-center gap-3">
