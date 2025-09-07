@@ -70,13 +70,30 @@ export const adminApi = baseApi.injectEndpoints({
       invalidatesTags: ["DRIVER"],
     }),
 
-    getAllRide: builder.query<IRide[], void>({
-      query: () => ({
+    getAllRide: builder.query<
+      { data: IRide[]; meta: { page: number; limit: number; total: number } },
+      {
+        search?: string;
+        status?: string;
+        vehicleType?: string;
+        sortBy?: string;
+        sortOrder?: "asc" | "desc";
+        page?: number;
+        limit?: number;
+      }
+    >({
+      query: (params) => ({
         url: "/ride",
         method: "GET",
+        params,
       }),
       providesTags: ["RIDE"],
-      transformResponse: (response: IResponse<IRide[]>) => response.data,
+      transformResponse: (response: IResponseWithMeta<IRide[]>) => {
+        return {
+          data: response.data,
+          meta: response.meta,
+        };
+      },
     }),
   }),
 });

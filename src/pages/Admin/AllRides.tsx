@@ -22,321 +22,18 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { type IRide } from "@/types";
 import { formatDate } from "@/lib/utils";
 import { useGetAllRideQuery } from "@/redux/features/admin/admin.api";
-
-// Mock data for now - replace with actual API call
-const mockRides: IRide[] = [
-  {
-    _id: "1",
-    riderId: "rider1",
-    driverId: "driver1",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Central Park, New York",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Times Square, New York",
-    },
-    fare: 25.5,
-    distance: 2.5,
-    status: "COMPLETED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T10:00:00Z"),
-      acceptedAt: new Date("2024-01-15T10:05:00Z"),
-      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
-      completedAt: new Date("2024-01-15T10:35:00Z"),
-    },
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:35:00Z",
-  },
-  {
-    _id: "2",
-    riderId: "rider2",
-    driverId: "driver2",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Brooklyn Bridge, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Empire State Building, NY",
-    },
-    fare: 18.75,
-    distance: 1.8,
-    status: "IN_TRANSIT",
-    vehicleType: "BIKE",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T11:00:00Z"),
-      acceptedAt: new Date("2024-01-15T11:03:00Z"),
-      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
-    },
-    createdAt: "2024-01-15T11:00:00Z",
-    updatedAt: "2024-01-15T11:10:00Z",
-  },
-  {
-    _id: "3",
-    riderId: "rider3",
-    driverId: "driver3",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Statue of Liberty, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Wall Street, NY",
-    },
-    fare: 32.0,
-    distance: 3.2,
-    status: "REQUESTED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T12:00:00Z"),
-    },
-    createdAt: "2024-01-15T12:00:00Z",
-    updatedAt: "2024-01-15T12:00:00Z",
-  },
-  {
-    _id: "4",
-    riderId: "rider1",
-    driverId: "driver1",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Central Park, New York",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Times Square, New York",
-    },
-    fare: 25.5,
-    distance: 2.5,
-    status: "COMPLETED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T10:00:00Z"),
-      acceptedAt: new Date("2024-01-15T10:05:00Z"),
-      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
-      completedAt: new Date("2024-01-15T10:35:00Z"),
-    },
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:35:00Z",
-  },
-  {
-    _id: "5",
-    riderId: "rider2",
-    driverId: "driver2",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Brooklyn Bridge, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Empire State Building, NY",
-    },
-    fare: 18.75,
-    distance: 1.8,
-    status: "IN_TRANSIT",
-    vehicleType: "BIKE",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T11:00:00Z"),
-      acceptedAt: new Date("2024-01-15T11:03:00Z"),
-      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
-    },
-    createdAt: "2024-01-15T11:00:00Z",
-    updatedAt: "2024-01-15T11:10:00Z",
-  },
-  {
-    _id: "6",
-    riderId: "rider3",
-    driverId: "driver3",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Statue of Liberty, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Wall Street, NY",
-    },
-    fare: 32.0,
-    distance: 3.2,
-    status: "REQUESTED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T12:00:00Z"),
-    },
-    createdAt: "2024-01-15T12:00:00Z",
-    updatedAt: "2024-01-15T12:00:00Z",
-  },
-  {
-    _id: "7",
-    riderId: "rider1",
-    driverId: "driver1",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Central Park, New York",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Times Square, New York",
-    },
-    fare: 25.5,
-    distance: 2.5,
-    status: "COMPLETED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T10:00:00Z"),
-      acceptedAt: new Date("2024-01-15T10:05:00Z"),
-      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
-      completedAt: new Date("2024-01-15T10:35:00Z"),
-    },
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:35:00Z",
-  },
-  {
-    _id: "8",
-    riderId: "rider2",
-    driverId: "driver2",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Brooklyn Bridge, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Empire State Building, NY",
-    },
-    fare: 18.75,
-    distance: 1.8,
-    status: "IN_TRANSIT",
-    vehicleType: "BIKE",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T11:00:00Z"),
-      acceptedAt: new Date("2024-01-15T11:03:00Z"),
-      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
-    },
-    createdAt: "2024-01-15T11:00:00Z",
-    updatedAt: "2024-01-15T11:10:00Z",
-  },
-  {
-    _id: "9",
-    riderId: "rider3",
-    driverId: "driver3",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Statue of Liberty, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Wall Street, NY",
-    },
-    fare: 32.0,
-    distance: 3.2,
-    status: "REQUESTED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T12:00:00Z"),
-    },
-    createdAt: "2024-01-15T12:00:00Z",
-    updatedAt: "2024-01-15T12:00:00Z",
-  },
-  {
-    _id: "10",
-    riderId: "rider1",
-    driverId: "driver1",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Central Park, New York",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Times Square, New York",
-    },
-    fare: 25.5,
-    distance: 2.5,
-    status: "COMPLETED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T10:00:00Z"),
-      acceptedAt: new Date("2024-01-15T10:05:00Z"),
-      pickedUpAt: new Date("2024-01-15T10:15:00Z"),
-      completedAt: new Date("2024-01-15T10:35:00Z"),
-    },
-    createdAt: "2024-01-15T10:00:00Z",
-    updatedAt: "2024-01-15T10:35:00Z",
-  },
-  {
-    _id: "11",
-    riderId: "rider2",
-    driverId: "driver2",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Brooklyn Bridge, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Empire State Building, NY",
-    },
-    fare: 18.75,
-    distance: 1.8,
-    status: "IN_TRANSIT",
-    vehicleType: "BIKE",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T11:00:00Z"),
-      acceptedAt: new Date("2024-01-15T11:03:00Z"),
-      pickedUpAt: new Date("2024-01-15T11:10:00Z"),
-    },
-    createdAt: "2024-01-15T11:00:00Z",
-    updatedAt: "2024-01-15T11:10:00Z",
-  },
-  {
-    _id: "12",
-    riderId: "rider3",
-    driverId: "driver3",
-    pickupLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Statue of Liberty, NY",
-    },
-    destinationLocation: {
-      type: "Point",
-      coordinates: [0, 0],
-      name: "Wall Street, NY",
-    },
-    fare: 32.0,
-    distance: 3.2,
-    status: "REQUESTED",
-    vehicleType: "CAR",
-    timestamps: {
-      requestedAt: new Date("2024-01-15T12:00:00Z"),
-    },
-    createdAt: "2024-01-15T12:00:00Z",
-    updatedAt: "2024-01-15T12:00:00Z",
-  },
-];
 
 const statusConfig = {
   REQUESTED: {
@@ -383,20 +80,10 @@ const vehicleTypeConfig = {
 };
 
 export default function AllRides() {
-  const {
-    data: allRides = [],
-    // isLoading,
-    // error,
-    // refetch,
-  } = useGetAllRideQuery();
-
-  console.log(allRides);
-
   const [filters, setFilters] = useState<{
     search: string;
     status: string | "all";
     vehicleType: string | "all";
-    fareRange: string | "all";
     page: number;
     limit: number;
     sortBy?: string;
@@ -405,7 +92,6 @@ export default function AllRides() {
     search: "",
     status: "all",
     vehicleType: "all",
-    fareRange: "all",
     page: 1,
     limit: 10,
   });
@@ -413,18 +99,49 @@ export default function AllRides() {
   const [selectedRide, setSelectedRide] = useState<IRide | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  // Mock data - replace with actual API call
-  const rides = mockRides;
-  const isLoading = false;
-  const isFetching = false;
-  const isError = false;
+  // Build query parameters for API
+  const queryParams = useMemo(() => {
+    const params: Record<string, string> = {
+      page: filters.page.toString(),
+      limit: filters.limit.toString(),
+    };
+
+    if (filters.search) {
+      params.search = filters.search;
+    }
+    if (filters.status !== "all") {
+      params.status = filters.status;
+    }
+    if (filters.vehicleType !== "all") {
+      params.vehicleType = filters.vehicleType;
+    }
+    if (filters.sortBy) {
+      params.sortBy = filters.sortBy;
+    }
+    if (filters.sortOrder) {
+      params.sortOrder = filters.sortOrder;
+    }
+
+    return params;
+  }, [filters]);
+
+  const {
+    data: ridesData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useGetAllRideQuery(queryParams);
+
+  const rides = ridesData?.data || [];
+  const meta = ridesData?.meta;
+  const isError = !!error;
 
   const clearFilters = () => {
     setFilters({
       search: "",
       status: "all",
       vehicleType: "all",
-      fareRange: "all",
       page: 1,
       limit: filters.limit,
     });
@@ -438,94 +155,11 @@ export default function AllRides() {
     }));
   };
 
-  // Client-side filtering
-  const filteredRides = useMemo(() => {
-    const term = filters.search.trim().toLowerCase();
-    return rides.filter((ride) => {
-      const matchesSearch =
-        term === "" ||
-        ride.pickupLocation.name.toLowerCase().includes(term) ||
-        ride.destinationLocation.name.toLowerCase().includes(term) ||
-        ride.riderId.toLowerCase().includes(term) ||
-        ride.driverId.toLowerCase().includes(term);
+  const handlePageChange = (page: number) => {
+    setFilters((f) => ({ ...f, page }));
+  };
 
-      const matchesStatus =
-        filters.status === "all" || ride.status === filters.status;
-      const matchesVehicleType =
-        filters.vehicleType === "all" ||
-        ride.vehicleType === filters.vehicleType;
-
-      let matchesFareRange = true;
-      if (filters.fareRange !== "all") {
-        const fare = ride.fare;
-        switch (filters.fareRange) {
-          case "low":
-            matchesFareRange = fare < 199;
-            break;
-          case "medium":
-            matchesFareRange = fare >= 199 && fare < 499;
-            break;
-          case "high":
-            matchesFareRange = fare >= 500;
-            break;
-        }
-      }
-
-      return (
-        matchesSearch && matchesStatus && matchesVehicleType && matchesFareRange
-      );
-    });
-  }, [
-    rides,
-    filters.search,
-    filters.status,
-    filters.vehicleType,
-    filters.fareRange,
-  ]);
-
-  // Client-side sorting
-  const sortedRides = useMemo(() => {
-    if (!filters.sortBy) return filteredRides;
-
-    const sortKey = filters.sortBy as keyof IRide;
-    const direction = filters.sortOrder === "asc" ? 1 : -1;
-
-    const copy = [...filteredRides];
-
-    copy.sort((a, b) => {
-      const aVal = a[sortKey];
-      const bVal = b[sortKey];
-
-      if (aVal == null && bVal == null) return 0;
-      if (aVal == null) return 1 * direction;
-      if (bVal == null) return -1 * direction;
-
-      if (sortKey === "createdAt" || sortKey === "updatedAt") {
-        const aNum = new Date(aVal as string).getTime();
-        const bNum = new Date(bVal as string).getTime();
-        if (aNum < bNum) return -1 * direction;
-        if (aNum > bNum) return 1 * direction;
-        return 0;
-      }
-
-      if (sortKey === "fare" || sortKey === "distance") {
-        const aNum = Number(aVal);
-        const bNum = Number(bVal);
-        if (aNum < bNum) return -1 * direction;
-        if (aNum > bNum) return 1 * direction;
-        return 0;
-      }
-
-      const aStr = String(aVal).toLowerCase();
-      const bStr = String(bVal).toLowerCase();
-
-      if (aStr < bStr) return -1 * direction;
-      if (aStr > bStr) return 1 * direction;
-      return 0;
-    });
-
-    return copy;
-  }, [filteredRides, filters.sortBy, filters.sortOrder]);
+  const totalPages = meta ? Math.ceil(meta.total / meta.limit) : 1;
 
   const handleViewDetails = (ride: IRide) => {
     setSelectedRide(ride);
@@ -556,7 +190,7 @@ export default function AllRides() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            onClick={() => {}} // Add refetch function
+            onClick={() => refetch()}
             disabled={isLoading || isFetching}
             className="flex items-center gap-2"
           >
@@ -582,7 +216,7 @@ export default function AllRides() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Search</label>
               <div className="relative">
@@ -644,25 +278,6 @@ export default function AllRides() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Fare Range</label>
-              <Select
-                value={filters.fareRange}
-                onValueChange={(value) =>
-                  setFilters((f) => ({ ...f, fareRange: value, page: 1 }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="All Fares" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Fares</SelectItem>
-                  <SelectItem value="low">Low (&lt;$199)</SelectItem>
-                  <SelectItem value="medium">Medium ($200-$499)</SelectItem>
-                  <SelectItem value="high">High (&gt;$500)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
               <label className="text-sm font-medium">Per Page</label>
               <Select
                 value={String(filters.limit)}
@@ -689,7 +304,15 @@ export default function AllRides() {
       {/* Summary */}
       <div className="flex items-center justify-between mt-6 mb-3">
         <p className="text-sm text-muted-foreground">
-          Showing {sortedRides.length} of {rides.length} rides
+          {meta ? (
+            <>
+              Showing {(meta.page - 1) * meta.limit + 1} to{" "}
+              {Math.min(meta.page * meta.limit, meta.total)} of {meta.total}{" "}
+              rides
+            </>
+          ) : (
+            `Showing ${rides.length} rides`
+          )}
         </p>
         {isFetching && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -736,7 +359,7 @@ export default function AllRides() {
                       Failed to load rides.
                     </td>
                   </tr>
-                ) : sortedRides.length === 0 ? (
+                ) : rides.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-10 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -749,7 +372,7 @@ export default function AllRides() {
                     </td>
                   </tr>
                 ) : (
-                  sortedRides.map((ride) => (
+                  rides.map((ride) => (
                     <tr
                       key={ride._id}
                       className="border-b hover:bg-muted/40 transition-colors"
@@ -764,7 +387,8 @@ export default function AllRides() {
                             Rider: {ride.riderId.slice(-6)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            Driver: {ride.driverId.slice(-6)}
+                            Driver:{" "}
+                            {ride.driverId ? ride.driverId.slice(-6) : "N/A"}
                           </div>
                         </div>
                       </td>
@@ -799,11 +423,11 @@ export default function AllRides() {
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-3 w-3 text-green-600" />
                             <span className="font-medium">
-                              ${ride.fare.toFixed(2)}
+                              ${Number(ride.fare).toFixed(2)}
                             </span>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {ride.distance.toFixed(1)} km
+                            {Number(ride.distance).toFixed(1)} km
                           </div>
                         </div>
                       </td>
@@ -874,6 +498,85 @@ export default function AllRides() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {meta && totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (filters.page > 1) {
+                      handlePageChange(filters.page - 1);
+                    }
+                  }}
+                  className={
+                    filters.page <= 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (filters.page <= 3) {
+                  pageNum = i + 1;
+                } else if (filters.page >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  pageNum = filters.page - 2 + i;
+                }
+
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePageChange(pageNum);
+                      }}
+                      isActive={filters.page === pageNum}
+                      className="cursor-pointer"
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+
+              {totalPages > 5 && filters.page < totalPages - 2 && (
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              )}
+
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (filters.page < totalPages) {
+                      handlePageChange(filters.page + 1);
+                    }
+                  }}
+                  className={
+                    filters.page >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* Ride Details Modal */}
       {showDetailsModal && selectedRide && (
@@ -971,7 +674,7 @@ export default function AllRides() {
                   <div className="text-center p-3 bg-muted/50 rounded-lg">
                     <DollarSign className="h-6 w-6 text-green-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold">
-                      ${selectedRide.fare.toFixed(2)}
+                      ${Number(selectedRide.fare).toFixed(2)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Total Fare
@@ -980,7 +683,7 @@ export default function AllRides() {
                   <div className="text-center p-3 bg-muted/50 rounded-lg">
                     <MapPin className="h-6 w-6 text-blue-600 mx-auto mb-2" />
                     <div className="text-2xl font-bold">
-                      {selectedRide.distance.toFixed(1)}
+                      {Number(selectedRide.distance).toFixed(1)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       Distance (km)
@@ -1071,7 +774,7 @@ export default function AllRides() {
                       Driver ID
                     </label>
                     <p className="font-mono text-sm bg-muted/50 p-2 rounded">
-                      {selectedRide.driverId}
+                      {selectedRide.driverId || "N/A"}
                     </p>
                   </div>
                 </div>

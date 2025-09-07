@@ -1,14 +1,15 @@
 export interface IRide {
   _id: string;
   riderId: string;
-  driverId: string;
-  pickupLocation: PickupLocation;
-  destinationLocation: DestinationLocation;
+  driverId: string | null;
+  pickupLocation: IRideLocation;
+  destinationLocation: IRideLocation;
   fare: number;
   distance: number;
   status: RideStatus;
   vehicleType: "CAR" | "BIKE";
   timestamps: IRideTimestamps;
+  cancellationReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -24,20 +25,14 @@ export type RideStatus =
   | "CANCELLED";
 
 export interface IRideRequest {
-  pickupLocation: PickupLocation;
-  destinationLocation: DestinationLocation;
+  pickupLocation: IRideLocation;
+  destinationLocation: IRideLocation;
   vehicleType: string;
 }
 
-export interface PickupLocation {
-  type: string;
-  coordinates: number[];
-  name: string;
-}
-
-export interface DestinationLocation {
-  type: string;
-  coordinates: number[];
+export interface IRideLocation {
+  type: "Point";
+  coordinates: [number, number]; // GeoJSON: [lng, lat]
   name: string;
 }
 

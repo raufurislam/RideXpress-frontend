@@ -391,7 +391,7 @@ export default function RideDetails() {
                 </div>
                 <div className="flex-1">
                   <div className="font-medium">
-                    Driver #{ride.driverId.slice(-6)}
+                    Driver #{ride.driverId?.slice(-6) || "N/A"}
                   </div>
                   <div className="text-sm text-muted-foreground mt-1">
                     Professional driver with excellent rating

@@ -133,7 +133,7 @@ export default function RideHistory() {
         term === "" ||
         ride.pickupLocation.name.toLowerCase().includes(term) ||
         ride.destinationLocation.name.toLowerCase().includes(term) ||
-        ride.driverId.toLowerCase().includes(term);
+        ride.driverId?.toLowerCase().includes(term);
 
       const matchesStatus =
         filters.status === "all" || ride.status === filters.status;
