@@ -1,3 +1,4 @@
+import mobileImg from "@/assets/images/mobile-app-location-digital-art.jpg";
 import { Button } from "@/components/ui/button";
 import { role } from "@/constants/role";
 import { useUserInfoQuery } from "@/redux/features/auth/auth.api";
@@ -68,9 +69,11 @@ export default function HeroSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid items-center gap-10 py-8  md:py-8 lg:grid-cols-2">
           <div className="flex flex-col gap-6 text-center lg:text-left">
-            <div className="inline-flex items-center justify-center gap-2 rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground lg:self-start dark:border-input">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              Smarter, safer city rides
+            <div className="flex justify-center lg:justify-start">
+              <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs sm:text-sm text-muted-foreground bg-background dark:border-input">
+                <span className="inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+                <span>Smarter, safer city rides</span>
+              </div>
             </div>
 
             <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
@@ -102,7 +105,7 @@ export default function HeroSection() {
             <div className="absolute -inset-8 -z-10 rounded-3xl bg-gradient-to-tr from-primary/10 via-transparent to-transparent blur-2xl dark:from-primary/20" />
             <div className="aspect-[5/4] w-full overflow-hidden rounded-2xl border bg-muted/30 shadow-sm dark:border-input">
               <img
-                src="/src/assets/images/mobile-app-location-digital-art.jpg"
+                src={mobileImg}
                 alt="RideExpress app preview"
                 className="size-full object-cover"
                 loading="eager"
