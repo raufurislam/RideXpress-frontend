@@ -663,8 +663,13 @@ export default function ActiveRides() {
     useGetDriverMyProfileQuery();
   const { data: me } = useUserInfoQuery();
 
-  // Ensure allRides is always an array
-  const allRides = Array.isArray(allRidesData) ? allRidesData : [];
+  // Ensure allRides is always an array (supports both IRide[] and { data: IRide[]; meta })
+  const allRides = useMemo(() => {
+    const raw: any = allRidesData;
+    if (Array.isArray(raw)) return raw;
+    if (raw && Array.isArray(raw.data)) return raw.data;
+    return [];
+  }, [allRidesData]);
 
   // Filter rides to show only active ones (not REQUESTED or REJECTED)
   // const activeRides = useMemo(() => {
