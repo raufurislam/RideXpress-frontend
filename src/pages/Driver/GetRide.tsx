@@ -122,7 +122,7 @@ export default function GetRide() {
 
   // Apply filters and sorting
   const filteredAndSortedRides = useMemo(() => {
-    let filtered = requestedRides;
+    let filtered: IRide[] = [...requestedRides];
 
     // Search filter
     if (filters.search) {
@@ -161,8 +161,8 @@ export default function GetRide() {
 
     // Sorting
     filtered.sort((a, b) => {
-      const aValue = (a as any)[filters.sortBy as keyof typeof a];
-      const bValue = (b as any)[filters.sortBy as keyof typeof b];
+      const aValue = (a as any)[filters.sortBy as keyof IRide];
+      const bValue = (b as any)[filters.sortBy as keyof IRide];
 
       if (filters.sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
